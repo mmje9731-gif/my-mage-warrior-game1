@@ -1,3 +1,132 @@
+// 🎨 판타지 캐릭터 & 몬스터 고화질 SVG 일러스트 모음
+const svgArt = {
+  archer: `
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- 망토 -->
+      <path d="M35 55 L20 105 L100 105 L85 55 Z" fill="#1b5e20"/>
+      <!-- 몸통 -->
+      <rect x="44" y="55" width="32" height="40" rx="8" fill="#2e7d32"/>
+      <rect x="44" y="75" width="32" height="7" fill="#5d4037"/>
+      <rect x="56" y="74" width="8" height="9" fill="#ffd54f"/>
+      <!-- 얼굴 -->
+      <circle cx="60" cy="40" r="18" fill="#ffe0b2"/>
+      <!-- 금발 머리카락 -->
+      <path d="M40 38 Q42 18 60 18 Q78 18 80 38 Q72 28 60 30 Q48 28 40 38 Z" fill="#fbc02d"/>
+      <!-- 궁수 모자 (깃털 달린 후드) -->
+      <path d="M38 34 L60 12 L82 34 Z" fill="#388e3c"/>
+      <path d="M75 22 Q92 10 95 25 Q82 26 75 22 Z" fill="#ff5252"/>
+      <!-- 눈 -->
+      <circle cx="53" cy="41" r="2.5" fill="#1a1a2e"/>
+      <circle cx="67" cy="41" r="2.5" fill="#1a1a2e"/>
+      <path d="M56 48 Q60 51 64 48" stroke="#d84315" stroke-width="2" fill="none"/>
+      <!-- 거대한 활과 화살 -->
+      <path d="M88 18 Q115 60 88 102" stroke="#8d6e63" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <line x1="88" y1="18" x2="88" y2="102" stroke="#e0e0e0" stroke-width="1.5"/>
+      <line x1="65" y1="60" x2="112" y2="60" stroke="#ffd54f" stroke-width="3"/>
+      <polygon points="116,60 106,55 106,65" fill="#4ecca3"/>
+    </svg>`,
+  mage: `
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- 로브 -->
+      <path d="M38 55 L25 105 L95 105 L82 55 Z" fill="#311b92"/>
+      <path d="M52 55 L60 105 L68 55 Z" fill="#7e57c2"/>
+      <!-- 얼굴 -->
+      <circle cx="60" cy="42" r="17" fill="#ffe0b2"/>
+      <!-- 마법사 고깔모자 -->
+      <path d="M30 34 L90 34 L60 6 Z" fill="#4527a0"/>
+      <ellipse cx="60" cy="34" rx="34" ry="6" fill="#5e35b1"/>
+      <polygon points="60,16 62,22 68,22 63,26 65,31 60,28 55,31 57,26 52,22 58,22" fill="#ffd54f"/>
+      <!-- 눈 -->
+      <circle cx="54" cy="43" r="2.5" fill="#1a1a2e"/>
+      <circle cx="66" cy="43" r="2.5" fill="#1a1a2e"/>
+      <!-- 마법 지팡이 -->
+      <line x1="94" y1="25" x2="94" y2="105" stroke="#8d6e63" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="94" cy="22" r="9" fill="#00e5ff"/>
+      <circle cx="94" cy="22" r="4" fill="#ffffff"/>
+    </svg>`,
+  paladin: `
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- 갑옷 -->
+      <rect x="40" y="54" width="40" height="46" rx="8" fill="#90a4ae"/>
+      <path d="M40 54 L60 72 L80 54" fill="#cfd8dc"/>
+      <!-- 투구와 얼굴 -->
+      <circle cx="60" cy="38" r="18" fill="#ffe0b2"/>
+      <path d="M40 36 Q40 14 60 14 Q80 14 80 36 L75 30 L60 34 L45 30 Z" fill="#78909c"/>
+      <rect x="57" y="10" width="6" height="14" fill="#ffca28"/>
+      <!-- 눈 -->
+      <circle cx="53" cy="40" r="2.5" fill="#1a1a2e"/>
+      <circle cx="67" cy="40" r="2.5" fill="#1a1a2e"/>
+      <!-- 황금 방패 -->
+      <path d="M18 55 L42 55 L42 82 Q30 98 18 82 Z" fill="#1565c0" stroke="#ffd54f" stroke-width="3"/>
+      <!-- 성검 -->
+      <rect x="90" y="25" width="7" height="55" fill="#e0f7fa"/>
+      <rect x="82" y="78" width="23" height="6" fill="#ffd54f"/>
+      <rect x="91" y="84" width="5" height="14" fill="#5d4037"/>
+    </svg>`,
+  slime: `
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- 슬라임 몸통 -->
+      <path d="M20 92 Q15 42 60 36 Q105 42 100 92 Q80 104 60 104 Q40 104 20 92 Z" fill="#00e676"/>
+      <path d="M32 52 Q42 42 55 44" stroke="#b9f6ca" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <!-- 왕관 -->
+      <polygon points="42,36 46,18 54,28 60,15 66,28 74,18 78,36" fill="#ffd54f" stroke="#ff8f00" stroke-width="2"/>
+      <!-- 눈과 입 -->
+      <circle cx="46" cy="66" r="6" fill="#1a1a2e"/>
+      <circle cx="48" cy="64" r="2" fill="#ffffff"/>
+      <circle cx="74" cy="66" r="6" fill="#1a1a2e"/>
+      <circle cx="76" cy="64" r="2" fill="#ffffff"/>
+      <path d="M50 80 Q60 90 70 80" stroke="#1a1a2e" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </svg>`,
+  orc: `
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- 오크 몸통 -->
+      <rect x="30" y="58" width="60" height="46" rx="12" fill="#558b2f"/>
+      <path d="M35 62 L85 95 M85 62 L35 95" stroke="#4e342e" stroke-width="8"/>
+      <!-- 얼굴 -->
+      <rect x="38" y="24" width="44" height="38" rx="10" fill="#689f38"/>
+      <!-- 뿔 & 송곳니 -->
+      <polygon points="38,32 24,18 42,24" fill="#eceff1"/>
+      <polygon points="82,32 96,18 78,24" fill="#eceff1"/>
+      <polygon points="46,54 49,44 52,54" fill="#ffffff"/>
+      <polygon points="68,54 71,44 74,54" fill="#ffffff"/>
+      <!-- 눈 -->
+      <circle cx="50" cy="38" r="4" fill="#ff1744"/>
+      <circle cx="70" cy="38" r="4" fill="#ff1744"/>
+      <!-- 거대 몽둥이 -->
+      <path d="M95 95 L108 30 L116 32 L102 97 Z" fill="#6d4c41"/>
+    </svg>`,
+  golem: `
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- 얼음 바위 몸체 -->
+      <polygon points="35,45 85,45 98,98 22,98" fill="#4fc3f7" stroke="#0288d1" stroke-width="3"/>
+      <polygon points="42,18 78,18 85,45 35,45" fill="#81d4fa" stroke="#0288d1" stroke-width="3"/>
+      <!-- 얼음 결정 -->
+      <polygon points="28,45 14,25 38,38" fill="#e1f5fe"/>
+      <polygon points="92,45 106,25 82,38" fill="#e1f5fe"/>
+      <!-- 빛나는 눈 -->
+      <rect x="46" y="28" width="10" height="5" fill="#ffea00"/>
+      <rect x="64" y="28" width="10" height="5" fill="#ffea00"/>
+      <path d="M48 65 L60 75 L72 65" stroke="#01579b" stroke-width="4" fill="none"/>
+    </svg>`,
+  dragon: `
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- 날개 -->
+      <path d="M35 55 L8 25 L25 68 Z" fill="#b71c1c"/>
+      <path d="M85 55 L112 25 L95 68 Z" fill="#b71c1c"/>
+      <!-- 드래곤 몸통 -->
+      <path d="M38 52 L28 104 L92 104 L82 52 Z" fill="#d32f2f"/>
+      <path d="M48 60 L44 104 L76 104 L72 60 Z" fill="#ffb300"/>
+      <!-- 머리 & 뿔 -->
+      <rect x="40" y="22" width="40" height="34" rx="10" fill="#e53935"/>
+      <polygon points="42,24 30,6 50,22" fill="#ffd54f"/>
+      <polygon points="78,24 90,6 70,22" fill="#ffd54f"/>
+      <!-- 불꽃 눈 & 입 -->
+      <circle cx="50" cy="36" r="4" fill="#ffea00"/>
+      <circle cx="70" cy="36" r="4" fill="#ffea00"/>
+      <path d="M48 47 L54 43 L60 47 L66 43 L72 47" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+    </svg>`
+};
+
 // 📚 2022 개정 초등 영어 어휘 사전
 const vocabDict = {
   "3학년": [
@@ -139,43 +268,62 @@ const lessonsList = [
   { id: "L12", name: "Lesson 12 (2학기 12단원)" }
 ];
 
-// 학년별 보스 몬스터 설정
 const monstersByGrade = {
-  "3학년": { avatar: "🟢", name: "슬라임 킹", maxHp: 110 },
-  "4학년": { avatar: "👹", name: "숲속의 오크", maxHp: 130 },
-  "5학년": { avatar: "❄️", name: "얼음 골렘", maxHp: 150 },
-  "6학년": { avatar: "🐉", name: "레드 드래곤", maxHp: 170 }
+  "3학년": { art: "slime", name: "슬라임 킹", maxHp: 110 },
+  "4학년": { art: "orc", name: "숲속의 오크", maxHp: 135 },
+  "5학년": { art: "golem", name: "얼음 골렘", maxHp: 160 },
+  "6학년": { art: "dragon", name: "레드 드래곤", maxHp: 185 }
 };
 
-// 영웅 직업 데이터
 const heroJobs = {
-  mage: { avatar: "🧙‍♀️", title: "영어 마법사" },
-  archer: { avatar: "🏹", title: "바람의 궁수" },
-  paladin: { avatar: "🛡️", title: "빛의 성기사" }
+  mage: {
+    art: "mage",
+    title: "영어 마법사",
+    weapons: ["견습생의 지팡이", "불꽃의 마도팡이", "현자의 별빛 지팡이", "천공의 아크스태프", "전설의 드래곤 지팡이"]
+  },
+  archer: {
+    art: "archer",
+    title: "바람의 궁수",
+    weapons: ["참나무 활", "질풍의 장궁", "은빛 달의 활", "태양의 불꽃활", "전설의 신궁 아폴론"]
+  },
+  paladin: {
+    art: "paladin",
+    title: "빛의 성기사",
+    weapons: ["강철 대검", "수호자의 성검", "사자왕의 황금검", "천상의 빛의 검", "전설의 엑스칼리버"]
+  }
 };
 
-// 동료 펫 진화 단계
 const petStages = [
   { icon: "🥚", name: "신비한 알", dmg: 0 },
   { icon: "🐣", name: "아기 병아리", dmg: 4 },
-  { icon: "🐲", name: "아기 드래곤", dmg: 8 },
-  { icon: "🦄", name: "전설의 유니콘", dmg: 14 }
+  { icon: "🐲", name: "아기 드래곤", dmg: 9 },
+  { icon: "🦄", name: "전설의 유니콘", dmg: 15 }
 ];
 
-let selectedHero = "mage";
+// 영구 성장 데이터 (localStorage 연동)
+let saveState = JSON.parse(localStorage.getItem('elem_rpg_save_v2') || 'null') || {
+  gold: 50,
+  heroLv: 1,
+  heroExp: 0,
+  weaponLv: 0,
+  petExp: 0
+};
+
+function persistSave() {
+  localStorage.setItem('elem_rpg_save_v2', JSON.stringify(saveState));
+}
+
+let selectedHero = "archer";
 let activeQuizPool = [];
 let mage = { hp: 100, maxHp: 100, mp: 100, maxMp: 100 };
-let warrior = { hp: 130, maxHp: 130, rage: 0, maxRage: 100 };
+let warrior = { hp: 110, maxHp: 110, rage: 0, maxRage: 100 };
 let isGameOver = false;
 let currentSkill = null;
 let currentQuiz = null;
 
-// 재미 요소 상태 변수
-let gold = 50;
 let comboCount = 0;
 let feverTurns = 0;
 let doubleDamageActive = false;
-let petExp = 0;
 let wrongWords = [];
 let collectedWords = JSON.parse(localStorage.getItem('elem_rpg_dex') || '[]');
 let questionStartTime = 0;
@@ -188,8 +336,20 @@ function selectHero(job) {
 }
 
 function initSelectors() {
+  // 메뉴 미리보기 캐릭터 SVG 삽입
+  document.getElementById('preview-mage').innerHTML = svgArt.mage;
+  document.getElementById('preview-archer').innerHTML = svgArt.archer;
+  document.getElementById('preview-paladin').innerHTML = svgArt.paladin;
+  selectHero('archer');
   onGradeChange();
-  updateDexUI();
+  updateMenuStats();
+}
+
+function updateMenuStats() {
+  document.getElementById('menu-hero-lv').innerText = saveState.heroLv;
+  document.getElementById('menu-weapon-lv').innerText = saveState.weaponLv;
+  document.getElementById('menu-gold-info').innerText = `💰 보유 골드: ${saveState.gold}G`;
+  document.getElementById('collection-summary').innerText = `📖 도감 수집: ${collectedWords.length}개`;
 }
 
 function onGradeChange() {
@@ -236,18 +396,37 @@ function onLessonChange() {
   document.getElementById('word-count-info').innerText = `출제 가능 어휘: ${activeQuizPool.length}개`;
 }
 
+function getHeroMaxStats() {
+  return {
+    maxHp: 100 + (saveState.heroLv - 1) * 15,
+    maxMp: 100 + (saveState.heroLv - 1) * 10,
+    maxExp: saveState.heroLv * 100
+  };
+}
+
+function getWeaponName() {
+  const list = heroJobs[selectedHero].weapons;
+  const idx = Math.min(list.length - 1, Math.floor(saveState.weaponLv / 2));
+  return `${list[idx]} (+${saveState.weaponLv})`;
+}
+
+function getForgeCost() {
+  return 40 + saveState.weaponLv * 25;
+}
+
 function startGame() {
   const grade = document.getElementById('grade-select').value;
   const pub = document.getElementById('pub-select').value;
   const lessonText = document.getElementById('lesson-select').selectedOptions[0].text;
   const monsterInfo = monstersByGrade[grade];
   const heroInfo = heroJobs[selectedHero];
+  const stats = getHeroMaxStats();
 
   document.getElementById('current-scope-badge').innerText = `${grade} | ${pub} | ${lessonText}`;
-  document.getElementById('hero-avatar').innerText = heroInfo.avatar;
+  document.getElementById('hero-art-box').innerHTML = svgArt[heroInfo.art];
   document.getElementById('hero-title').innerText = heroInfo.title;
 
-  document.getElementById('monster-avatar').innerText = monsterInfo.avatar;
+  document.getElementById('monster-art-box').innerHTML = svgArt[monsterInfo.art];
   document.getElementById('monster-name').innerText = monsterInfo.name;
   document.getElementById('warrior-maxhp-text').innerText = monsterInfo.maxHp;
   setMonsterSpeech("덤벼라, 꼬마 영웅!");
@@ -255,7 +434,7 @@ function startGame() {
   document.getElementById('selector-panel').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
 
-  mage = { hp: 100, maxHp: 100, mp: 100, maxMp: 100 };
+  mage = { hp: stats.maxHp, maxHp: stats.maxHp, mp: stats.maxMp, maxMp: stats.maxMp };
   warrior = { hp: monsterInfo.maxHp, maxHp: monsterInfo.maxHp, rage: 0, maxRage: 100 };
   isGameOver = false;
   comboCount = 0;
@@ -269,7 +448,7 @@ function startGame() {
   document.getElementById('quiz-box').style.display = 'none';
   document.getElementById('result-panel').style.display = 'none';
   updateUI();
-  log(`⚔️ [${grade} - ${pub}] ${monsterInfo.name}이(가) 나타났습니다!`);
+  log(`⚔️ [Lv.${saveState.heroLv} ${heroInfo.title}] 출격! ${monsterInfo.name}과(와) 대결합니다!`);
 }
 
 function backToMenu() {
@@ -277,7 +456,7 @@ function backToMenu() {
   document.querySelector('.game-container').classList.remove('fever-active');
   document.getElementById('game-screen').style.display = 'none';
   document.getElementById('selector-panel').style.display = 'block';
-  updateDexUI();
+  updateMenuStats();
 }
 
 function setMonsterSpeech(text) {
@@ -285,22 +464,38 @@ function setMonsterSpeech(text) {
 }
 
 function getPetStage() {
-  const lv = Math.min(4, Math.floor(petExp / 3) + 1);
+  const lv = Math.min(4, Math.floor(saveState.petExp / 3) + 1);
   return { lv, ...petStages[lv - 1] };
 }
 
 function updateUI() {
+  const stats = getHeroMaxStats();
+  mage.maxHp = stats.maxHp;
+  mage.maxMp = stats.maxMp;
+
+  document.getElementById('hero-lv-text').innerText = saveState.heroLv;
+  document.getElementById('weapon-tag').innerText = `⚔️ ${getWeaponName()}`;
+  document.getElementById('forge-cost-text').innerText = getForgeCost();
+
   document.getElementById('mage-hp-text').innerText = mage.hp;
+  document.getElementById('mage-maxhp-text').innerText = mage.maxHp;
   document.getElementById('mage-hp-bar').style.width = (mage.hp / mage.maxHp * 100) + '%';
+
   document.getElementById('mage-mp-text').innerText = mage.mp;
+  document.getElementById('mage-maxmp-text').innerText = mage.maxMp;
   document.getElementById('mage-mp-bar').style.width = (mage.mp / mage.maxMp * 100) + '%';
+
+  document.getElementById('hero-exp-text').innerText = saveState.heroExp;
+  document.getElementById('hero-maxexp-text').innerText = stats.maxExp;
+  document.getElementById('hero-exp-bar').style.width = (saveState.heroExp / stats.maxExp * 100) + '%';
 
   document.getElementById('warrior-hp-text').innerText = warrior.hp;
   document.getElementById('warrior-hp-bar').style.width = (warrior.hp / warrior.maxHp * 100) + '%';
   document.getElementById('warrior-rage-text').innerText = warrior.rage;
   document.getElementById('warrior-rage-bar').style.width = (warrior.rage / warrior.maxRage * 100) + '%';
 
-  document.getElementById('gold-text').innerText = gold;
+  document.getElementById('gold-text').innerText = saveState.gold;
+  document.getElementById('dex-count-btn').innerText = collectedWords.length;
 
   const pet = getPetStage();
   document.getElementById('pet-icon').innerText = pet.icon;
@@ -325,6 +520,37 @@ function updateUI() {
     feverBadge.style.display = 'none';
     container.classList.remove('fever-active');
   }
+}
+
+// 경험치 획득 및 레벨업 처리
+function gainHeroExp(amount) {
+  saveState.heroExp += amount;
+  let maxExp = getHeroMaxStats().maxExp;
+  while (saveState.heroExp >= maxExp) {
+    saveState.heroExp -= maxExp;
+    saveState.heroLv++;
+    const newStats = getHeroMaxStats();
+    mage.maxHp = newStats.maxHp;
+    mage.maxMp = newStats.maxMp;
+    mage.hp = mage.maxHp;
+    mage.mp = mage.maxMp;
+    maxExp = newStats.maxExp;
+    log(`🎊 <b>LEVEL UP! 영웅이 Lv.${saveState.heroLv}로 성장했습니다! (최대 HP/MP 상승 & 완전 회복!)</b>`);
+  }
+  persistSave();
+}
+
+// 대장간 무기 업그레이드
+function upgradeWeapon() {
+  const cost = getForgeCost();
+  if (saveState.gold < cost) {
+    return alert(`무기 강화 골드가 부족합니다! (필요: ${cost}G / 보유: ${saveState.gold}G)`);
+  }
+  saveState.gold -= cost;
+  saveState.weaponLv++;
+  persistSave();
+  log(`🔨 <b>대장간 강화 성공! [${getWeaponName()}]이(가) 되었습니다! (기본 공격력 +${saveState.weaponLv * 4})</b>`);
+  updateUI();
 }
 
 function triggerShake(cardId) {
@@ -355,36 +581,37 @@ function log(message) {
   logBox.innerHTML = `<div>${message}</div>` + logBox.innerHTML;
 }
 
-// 미니 상점 아이템 구매 및 사용
 function buyAndUseItem(type) {
   if (isGameOver) return;
   if (type === 'potion') {
-    if (gold < 30) return alert('골드가 부족합니다! (필요: 30G)');
+    if (saveState.gold < 30) return alert('골드가 부족합니다! (필요: 30G)');
     if (mage.hp >= mage.maxHp) return alert('이미 체력이 가득 찼습니다!');
-    gold -= 30;
-    mage.hp = Math.min(mage.maxHp, mage.hp + 40);
-    log(`🧪 <b>체력 물약</b>을 마셔 HP가 40 회복되었습니다!`);
+    saveState.gold -= 30;
+    mage.hp = Math.min(mage.maxHp, mage.hp + 45);
+    persistSave();
+    log(`🧪 <b>체력 물약</b>을 마셔 HP가 45 회복되었습니다!`);
     updateUI();
   } else if (type === 'double') {
-    if (gold < 40) return alert('골드가 부족합니다! (필요: 40G)');
+    if (saveState.gold < 40) return alert('골드가 부족합니다! (필요: 40G)');
     if (doubleDamageActive) return alert('이미 더블 공격 주문서가 적용되어 있습니다!');
-    gold -= 40;
+    saveState.gold -= 40;
     doubleDamageActive = true;
+    persistSave();
     log(`📜 <b>더블 공격 주문서</b> 발동! 다음 공격 데미지가 2배가 됩니다!`);
     updateUI();
   }
 }
 
-// 힌트 돋보기 (오답 2개 지우기)
 function useHintMagnifier() {
   if (!currentQuiz || currentQuiz.type !== 'choice') return alert('객관식 문제에서만 사용할 수 있습니다!');
-  if (gold < 20) return alert('골드가 부족합니다! (필요: 20G)');
+  if (saveState.gold < 20) return alert('골드가 부족합니다! (필요: 20G)');
 
   const buttons = Array.from(document.querySelectorAll('#quiz-options button'));
   const wrongButtons = buttons.filter((btn, idx) => idx !== currentQuiz.answer && !btn.disabled);
   if (wrongButtons.length < 2) return alert('이미 힌트를 사용했습니다!');
 
-  gold -= 20;
+  saveState.gold -= 20;
+  persistSave();
   wrongButtons.sort(() => 0.5 - Math.random()).slice(0, 2).forEach(btn => {
     btn.disabled = true;
     btn.innerText = "❌ (힌트로 제거됨)";
@@ -449,9 +676,9 @@ function openQuiz(skill) {
   currentQuiz = generateQuestion(skill);
 
   const skillNames = {
-    fireball: '🔥 파이어볼 영창 퀴즈',
-    thunder: '⚡ 썬더 스트라이크 (스펠링 필살기!)',
-    heal: '💚 힐링 영창 퀴즈',
+    fireball: '🔥 기본 공격 퀴즈',
+    thunder: '⚡ 필살기 (스펠링 입력!)',
+    heal: '💚 치유 마법 퀴즈',
     meditate: '✨ 마나 회복 명상 퀴즈'
   };
 
@@ -523,21 +750,14 @@ function registerToDex(wordObj) {
   if (!collectedWords.some(item => item.w === wordObj.w)) {
     collectedWords.push(wordObj);
     localStorage.setItem('elem_rpg_dex', JSON.stringify(collectedWords));
-    updateDexUI();
   }
-}
-
-function updateDexUI() {
-  document.getElementById('collection-summary').innerText = `📖 도감 수집: ${collectedWords.length}개`;
-  const btn = document.getElementById('dex-count-btn');
-  if (btn) btn.innerText = collectedWords.length;
 }
 
 function handleCorrectAnswer(isSpeedCrit) {
   comboCount++;
-  gold += 10;
+  saveState.gold += 15;
   const prevLv = getPetStage().lv;
-  petExp++;
+  saveState.petExp++;
   const newPet = getPetStage();
 
   registerToDex(currentQuiz.targetWord);
@@ -552,7 +772,8 @@ function handleCorrectAnswer(isSpeedCrit) {
   }
 
   setMonsterSpeech("으악! 네 영어 실력이 너무 강하다!");
-  log(`⭕ <b>정답!</b> (${currentQuiz.targetWord.w} = ${currentQuiz.targetWord.m}) [+10G]`);
+  log(`⭕ <b>정답!</b> (${currentQuiz.targetWord.w} = ${currentQuiz.targetWord.m}) [+15G / +25 EXP]`);
+  gainHeroExp(25);
   executeSkill(currentSkill, isSpeedCrit);
 }
 
@@ -578,19 +799,20 @@ function executeSkill(skill, isSpeedCrit) {
 
   const comboBonus = comboCount >= 2 ? (comboCount - 1) * 4 : 0;
   const mageJobBonus = selectedHero === 'mage' ? 5 : 0;
+  const weaponBonus = saveState.weaponLv * 4;
   const critChance = selectedHero === 'archer' ? 0.45 : 0.2;
   const isCrit = isSpeedCrit || Math.random() < critChance;
 
   let baseDmg = 0;
   if (skill === 'fireball') {
     if (!isFree) mage.mp -= 20;
-    baseDmg = Math.floor(Math.random() * 10) + 18 + comboBonus + mageJobBonus;
+    baseDmg = Math.floor(Math.random() * 10) + 18 + comboBonus + mageJobBonus + weaponBonus;
   } else if (skill === 'thunder') {
     if (!isFree) mage.mp -= 30;
-    baseDmg = Math.floor(Math.random() * 14) + 32 + comboBonus + mageJobBonus;
+    baseDmg = Math.floor(Math.random() * 14) + 32 + comboBonus + mageJobBonus + weaponBonus;
   } else if (skill === 'heal') {
     if (!isFree) mage.mp -= 25;
-    const heal = 35 + comboBonus;
+    const heal = 35 + comboBonus + (saveState.heroLv - 1) * 5;
     mage.hp = Math.min(mage.maxHp, mage.hp + heal);
     log(`💚 치유 마법 성공! 체력을 <b>${heal}</b> 회복했습니다.`);
   } else if (skill === 'meditate') {
@@ -607,10 +829,9 @@ function executeSkill(skill, isSpeedCrit) {
     warrior.hp = Math.max(0, warrior.hp - baseDmg);
     warrior.rage = Math.min(100, warrior.rage + 25);
     triggerShake('warrior-card');
-    log(`${skill === 'thunder' ? '⚡' : '🔥'} 적에게 <b>${baseDmg}</b>의 피해! ${isSpeedCrit ? '⚡<b>SPEED CRITICAL!</b>' : (isCrit ? '💥<b>치명타!</b>' : '')}`);
+    log(`${skill === 'thunder' ? '⚡' : '🔥'} 적에게 <b>${baseDmg}</b>의 피해! (무기 보너스 +${weaponBonus}) ${isSpeedCrit ? '⚡<b>SPEED CRITICAL!</b>' : (isCrit ? '💥<b>치명타!</b>' : '')}`);
   }
 
-  // 동료 펫 추가 공격
   const pet = getPetStage();
   if (pet.dmg > 0 && warrior.hp > 0) {
     warrior.hp = Math.max(0, warrior.hp - pet.dmg);
@@ -648,9 +869,10 @@ function warriorTurn() {
 
 function checkWinner() {
   if (warrior.hp <= 0) {
-    gold += 50;
+    saveState.gold += 60;
     setMonsterSpeech("끄아악... 네 영어 실력에 졌다...");
-    log(`🎉 <b>승리! 보상으로 +50G를 획득했습니다!</b>`);
+    log(`🎉 <b>승리! 보상으로 +60G와 +50 EXP를 획득했습니다!</b>`);
+    gainHeroExp(50);
     endGame();
     return true;
   }
@@ -665,6 +887,7 @@ function checkWinner() {
 
 function endGame() {
   isGameOver = true;
+  persistSave();
   updateUI();
   document.getElementById('controls').style.display = 'none';
   document.getElementById('quiz-box').style.display = 'none';
@@ -679,7 +902,6 @@ function endGame() {
   }
 }
 
-// 단어 도감 열기/닫기
 function openDexModal() {
   const grid = document.getElementById('dex-grid');
   if (collectedWords.length === 0) {
