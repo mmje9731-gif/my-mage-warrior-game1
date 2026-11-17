@@ -116,7 +116,6 @@ const vocabDict = {
   ]
 };
 
-// 학년별 2022 개정 검정 교과서 출판사 목록 (엑셀 검토수정본 기준)
 const publishersByGrade = {
   "3학년": ["YBM(최)", "YBM(김)", "천재(함)", "천재(김)", "천재(이)", "미래엔", "동아", "아이스크림"],
   "4학년": ["YBM(최)", "YBM(김)", "천재(함)", "천재(김)", "천재(이)", "미래엔", "동아", "아이스크림"],
@@ -124,7 +123,6 @@ const publishersByGrade = {
   "6학년": ["YBM(최)", "YBM(김)", "천재(함)", "천재(김)", "천재(이)", "미래엔", "동아", "아이스크림", "비상"]
 };
 
-// 단원 목록 생성
 const lessonsList = [
   { id: "ALL", name: "전체 단원 (전 범위 복습)" },
   { id: "L1", name: "Lesson 1 (1학기 1단원)" },
@@ -147,8 +145,9 @@ let warrior = { hp: 130, maxHp: 130, rage: 0, maxRage: 100 };
 let isGameOver = false;
 let currentSkill = null;
 let currentQuiz = null;
+let comboCount = 0;
+let wrongWords = [];
 
-// 초기 드롭다운 세팅
 function initSelectors() {
   onGradeChange();
 }
@@ -210,13 +209,15 @@ function startGame() {
   mage = { hp: 100, maxHp: 100, mp: 100, maxMp: 100 };
   warrior = { hp: 130, maxHp: 130, rage: 0, maxRage: 100 };
   isGameOver = false;
+  comboCount = 0;
+  wrongWords = [];
 
   document.getElementById('battle-log').innerHTML = '';
   document.getElementById('controls').style.display = 'block';
   document.getElementById('quiz-box').style.display = 'none';
-  document.getElementById('restart-btn').style.display = 'none';
+  document.getElementById('result-panel').style.display = 'none';
   updateUI();
-  log(`⚔️ [${grade} - ${pub}] 영어 배틀이 시작되었습니다! 스킬을 눌러 문제를 풀어보세요.`);
+  log(`⚔️ [${grade} - ${pub}] 초등영어 RPG 배틀이 시작되었습니다!`);
 }
 
 function backToMenu() {
@@ -234,6 +235,39 @@ function updateUI() {
   document.getElementById('warrior-hp-bar').style.width = (warrior.hp / warrior.maxHp * 100) + '%';
   document.getElementById('warrior-rage-text').innerText = warrior.rage;
   document.getElementById('warrior-rage-bar').style.width = (warrior.rage / warrior.maxRage * 100) + '%';
+
+  const comboBadge = document.getElementById('combo-badge');
+  if (comboCount >= 2) {
+    comboBadge.style.display = 'inline-block';
+    comboBadge.innerText = `🔥 ${comboCount} COMBO!`;
+  } else {
+    comboBadge.style.display = 'none';
+  }
+}
+
+// 피격 흔들림 효과
+function triggerShake(cardId) {
+  const card = document.getElementById(cardId);
+  card.classList.remove('shake');
+  void card.offsetWidth;
+  card.classList.add('shake');
+}
+
+// 원어민 발음 읽어주기 (TTS)
+function speakWord(wordText) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(wordText);
+    utter.lang = 'en-US';
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+function speakCurrentWord() {
+  if (currentQuiz && currentQuiz.targetWord) {
+    speakWord(currentQuiz.targetWord.w);
+  }
 }
 
 function log(message) {
@@ -241,20 +275,30 @@ function log(message) {
   logBox.innerHTML = `<div>${message}</div>` + logBox.innerHTML;
 }
 
-// 선택한 단원 단어에서 랜덤 4지선다 문제 자동 생성
-function generateQuestion() {
+function generateQuestion(skill) {
   const grade = document.getElementById('grade-select').value;
   const allGradeWords = vocabDict[grade];
   const target = activeQuizPool[Math.floor(Math.random() * activeQuizPool.length)];
 
-  // 오답 보기 3개 추출
+  // 썬더 스트라이크는 주관식 스펠링 입력 문제 출제
+  if (skill === 'thunder') {
+    return {
+      type: 'spelling',
+      targetWord: target,
+      q: `뜻: "${target.m}" → 영어 철자를 입력하세요!`,
+      pos: `[${target.pos} / ${target.w.length}글자]`
+    };
+  }
+
+  // 나머지는 4지선다 뜻 맞히기
   const wrongPool = allGradeWords.filter(item => item.w !== target.w);
   const shuffledWrong = wrongPool.sort(() => 0.5 - Math.random()).slice(0, 3);
-
   const options = [target.m, ...shuffledWrong.map(item => item.m)].sort(() => 0.5 - Math.random());
   const answerIdx = options.indexOf(target.m);
 
   return {
+    type: 'choice',
+    targetWord: target,
     q: `'${target.w}'의 뜻으로 알맞은 것은?`,
     pos: `[${target.pos}]`,
     options: options,
@@ -270,11 +314,11 @@ function openQuiz(skill) {
   if (skill === 'heal' && mage.mp < 25) return alert('마나가 부족합니다! (필요 MP: 25)');
 
   currentSkill = skill;
-  currentQuiz = generateQuestion();
+  currentQuiz = generateQuestion(skill);
 
   const skillNames = {
     fireball: '🔥 파이어볼 영창 퀴즈',
-    thunder: '⚡ 썬더 스트라이크 영창 퀴즈',
+    thunder: '⚡ 썬더 스트라이크 (스펠링 필살기!)',
     heal: '💚 힐링 영창 퀴즈',
     meditate: '✨ 마나 회복 명상 퀴즈'
   };
@@ -284,13 +328,30 @@ function openQuiz(skill) {
   document.getElementById('quiz-question').innerText = currentQuiz.q;
 
   const optionsDiv = document.getElementById('quiz-options');
-  optionsDiv.innerHTML = '';
-  currentQuiz.options.forEach((opt, idx) => {
-    const btn = document.createElement('button');
-    btn.innerText = `${idx + 1}. ${opt}`;
-    btn.onclick = () => submitAnswer(idx);
-    optionsDiv.appendChild(btn);
-  });
+  const spellingBox = document.getElementById('spelling-box');
+  const ttsBtn = document.getElementById('tts-btn');
+
+  if (currentQuiz.type === 'spelling') {
+    optionsDiv.style.display = 'none';
+    spellingBox.style.display = 'flex';
+    ttsBtn.style.display = 'inline-block';
+    const input = document.getElementById('spelling-input');
+    input.value = '';
+    setTimeout(() => input.focus(), 50);
+  } else {
+    spellingBox.style.display = 'none';
+    optionsDiv.style.display = 'grid';
+    ttsBtn.style.display = 'inline-block';
+    optionsDiv.innerHTML = '';
+    currentQuiz.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.innerText = `${idx + 1}. ${opt}`;
+      btn.onclick = () => submitAnswer(idx);
+      optionsDiv.appendChild(btn);
+    });
+    // 객관식일 때는 영어 단어를 원어민 발음으로 바로 읽어줌
+    speakWord(currentQuiz.targetWord.w);
+  }
 
   document.getElementById('controls').style.display = 'none';
   document.getElementById('quiz-box').style.display = 'block';
@@ -301,35 +362,65 @@ function submitAnswer(selectedIdx) {
   document.getElementById('controls').style.display = 'block';
 
   if (selectedIdx === currentQuiz.answer) {
-    log(`⭕ <b>정답!</b> 주문 영창에 성공했습니다!`);
+    comboCount++;
+    log(`⭕ <b>정답!</b> (${currentQuiz.targetWord.w} = ${currentQuiz.targetWord.m}) ${comboCount >= 2 ? `🔥 <b>${comboCount}연속 콤보!</b>` : ''}`);
     executeSkill(currentSkill);
   } else {
-    const correctText = currentQuiz.options[currentQuiz.answer];
-    log(`❌ <b>오답!</b> (정답: ${correctText}) 주문이 빗나갔습니다!`);
-    if (currentSkill === 'fireball') mage.mp = Math.max(0, mage.mp - 10);
-    if (currentSkill === 'thunder') mage.mp = Math.max(0, mage.mp - 15);
-    if (currentSkill === 'heal') mage.mp = Math.max(0, mage.mp - 10);
-    updateUI();
-    setTimeout(warriorTurn, 600);
+    handleWrongAnswer();
   }
 }
 
+function submitSpelling() {
+  const userText = document.getElementById('spelling-input').value.trim().toLowerCase();
+  if (!userText) return;
+
+  document.getElementById('quiz-box').style.display = 'none';
+  document.getElementById('controls').style.display = 'block';
+
+  if (userText === currentQuiz.targetWord.w.toLowerCase()) {
+    comboCount++;
+    speakWord(currentQuiz.targetWord.w);
+    log(`⭕ <b>철자 완벽 적중!</b> (${currentQuiz.targetWord.w}) ${comboCount >= 2 ? `🔥 <b>${comboCount}연속 콤보!</b>` : ''}`);
+    executeSkill(currentSkill);
+  } else {
+    handleWrongAnswer();
+  }
+}
+
+function handleWrongAnswer() {
+  comboCount = 0;
+  const target = currentQuiz.targetWord;
+  if (!wrongWords.some(item => item.w === target.w)) {
+    wrongWords.push(target);
+  }
+  log(`❌ <b>오답!</b> 정답은 <b>${target.w} (${target.m})</b> 입니다.`);
+  if (currentSkill === 'fireball') mage.mp = Math.max(0, mage.mp - 10);
+  if (currentSkill === 'thunder') mage.mp = Math.max(0, mage.mp - 15);
+  if (currentSkill === 'heal') mage.mp = Math.max(0, mage.mp - 10);
+  updateUI();
+  setTimeout(warriorTurn, 600);
+}
+
 function executeSkill(skill) {
+  const comboBonus = comboCount >= 2 ? (comboCount - 1) * 5 : 0;
+
   if (skill === 'fireball') {
     mage.mp -= 20;
-    const dmg = Math.floor(Math.random() * 15) + 20;
+    const dmg = Math.floor(Math.random() * 12) + 18 + comboBonus;
     warrior.hp = Math.max(0, warrior.hp - dmg);
     warrior.rage = Math.min(100, warrior.rage + 25);
-    log(`🔥 파이어볼 명중! 어둠의 전사에게 <b>${dmg}</b>의 피해를 입혔습니다!`);
+    triggerShake('warrior-card');
+    log(`🔥 파이어볼 명중! 전사에게 <b>${dmg}</b>의 피해! ${comboBonus > 0 ? `(콤보 보너스 +${comboBonus})` : ''}`);
   } else if (skill === 'thunder') {
     mage.mp -= 30;
-    const dmg = Math.floor(Math.random() * 20) + 28;
+    const dmg = Math.floor(Math.random() * 15) + 32 + comboBonus;
     warrior.hp = Math.max(0, warrior.hp - dmg);
     warrior.rage = Math.min(100, warrior.rage + 35);
-    log(`⚡ 썬더 스트라이크 작렬! 전사에게 <b>${dmg}</b>의 치명적인 피해!`);
+    triggerShake('warrior-card');
+    log(`⚡ 썬더 스트라이크 작렬! 전사에게 <b>${dmg}</b>의 초강력 피해! ${comboBonus > 0 ? `(콤보 보너스 +${comboBonus})` : ''}`);
   } else if (skill === 'heal') {
     mage.mp -= 25;
-    const heal = 35;
+    const heal = 35 + comboBonus;
     mage.hp = Math.min(mage.maxHp, mage.hp + heal);
     log(`💚 치유 마법 성공! 체력을 <b>${heal}</b> 회복했습니다.`);
   } else if (skill === 'meditate') {
@@ -345,6 +436,7 @@ function executeSkill(skill) {
 function warriorTurn() {
   if (isGameOver) return;
 
+  triggerShake('mage-card');
   if (warrior.rage >= 100) {
     warrior.rage = 0;
     const dmg = 38;
@@ -368,7 +460,7 @@ function checkWinner() {
     return true;
   }
   if (mage.hp <= 0) {
-    log(`💀 <b>패배... 영어 단어를 더 복습하고 다시 도전하세요!</b>`);
+    log(`💀 <b>패배... 아래 오답 노트를 복습하고 다시 도전하세요!</b>`);
     endGame();
     return true;
   }
@@ -379,8 +471,15 @@ function endGame() {
   isGameOver = true;
   document.getElementById('controls').style.display = 'none';
   document.getElementById('quiz-box').style.display = 'none';
-  document.getElementById('restart-btn').style.display = 'inline-block';
+  document.getElementById('result-panel').style.display = 'block';
+
+  const notesBox = document.getElementById('wrong-notes-box');
+  if (wrongWords.length === 0) {
+    notesBox.innerHTML = `<h4>🏆 퍼펙트 클리어! 틀린 단어가 하나도 없습니다!</h4>`;
+  } else {
+    const listHtml = wrongWords.map(item => `<li><b>${item.w}</b> : ${item.m} (${item.pos})</li>`).join('');
+    notesBox.innerHTML = `<h4>📝 오늘의 오답 복습 노트 (${wrongWords.length}개)</h4><ul>${listHtml}</ul>`;
+  }
 }
 
-// 페이지 로드 시 실행
 initSelectors();
