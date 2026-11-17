@@ -1,171 +1,107 @@
-function log(message, color = "white") {
-  const output = document.getElementById("output");
-  output.innerHTML += `<span style="color:${color}">${message}</span><br>`;
-}
-class Hero {
-  
-  constructor(name, health, attackPower) {
-    this.name = name;
-    this.health = health;
-    this.maxHealth = health;
-    this.attackPower = attackPower;
-    this.isAlive = true;
-  }
-  
-  takeDamage(amount){
-    this.health -= amount;
-    if (this.health <= 0) {
-      this.health = 0;
-      this.isAlive = false;
-    }
-    log(`${this.name} took ${amount} damage!. Health: ↓${this.health}/${this.maxHealth}.`);
-  }
-  
-  attack(target) {
-    if(!this.isAlive){
-      log(`${this.name} is dead and cannot attack!`);
-      return;
-    }
-    if(!target.isAlive) {
-      log(`${target.name} is already dead!`);
-      return;
-    }
-    log(`${this.name} attacks ${target.name}!`);
-    target.takeDamage(this.attackPower);
-  }
-  
-  heal(amount) {
-    if(!this.isAlive) {
-      (`${this.name} is already dead and cannot be healed`);
-      return
-    }
-    this.health = Math.min(this.health + amount, this.maxHealth);
-    log(`${this.name} healed! Health: ↑${this.health}/${this.maxHealth}`);
-  }
-  
-  getStatus() {
-    return `[${this.name}]\nHP: ${this.health}/${this.maxHealth}`;
-  }
+let mage = { hp: 100, maxHp: 100, mp: 100, maxMp: 100 };
+let warrior = { hp: 130, maxHp: 130, rage: 0, maxRage: 100 };
+let isGameOver = false;
+
+function updateUI() {
+  document.getElementById('mage-hp-text').innerText = mage.hp;
+  document.getElementById('mage-hp-bar').style.width = (mage.hp / mage.maxHp * 100) + '%';
+  document.getElementById('mage-mp-text').innerText = mage.mp;
+  document.getElementById('mage-mp-bar').style.width = (mage.mp / mage.maxMp * 100) + '%';
+
+  document.getElementById('warrior-hp-text').innerText = warrior.hp;
+  document.getElementById('warrior-hp-bar').style.width = (warrior.hp / warrior.maxHp * 100) + '%';
+  document.getElementById('warrior-rage-text').innerText = warrior.rage;
+  document.getElementById('warrior-rage-bar').style.width = (warrior.rage / warrior.maxRage * 100) + '%';
 }
 
-class Mage extends Hero {
-  
-  constructor(name, health, attackPower){
-    super(name, health, attackPower);
-    this.mana = 100;
-    this.spells = ["Fireball", "Ice Bolt", "Thunder Strike"];
-  }
-  
-  attack(target){
-    if(!this.isAlive) {
-      (`${this.name} is dead and cannot cast spells!`);
-      return;
-    }
-    if(this.mana < 10) {
-      log(`${this.name} is out of mana and cannot cast spells.`);
-      super.attack(target);
-      return;
-    }
-    const spell = this.spells[Math.floor(Math.random() * this.spells.length)];
-    const magicDamage = this.attackPower + Math.floor(Math.random() * 15);
-    this.mana -= 10;
-    
-    log(`✨ ${this.name} casts ${spell} on ${target.name}! (Mana: ${this.mana}/100)`);
-    target.takeDamage(magicDamage);
-  }
-  
-  getStatus() {
-    return super.getStatus() + ` | Mana: ${this.mana}/100`;
-  }
+function log(message) {
+  const logBox = document.getElementById('battle-log');
+  logBox.innerHTML = `<div>${message}</div>` + logBox.innerHTML;
 }
 
-class Warrior extends Hero {
-  
-  constructor(name, health, attackPower) {
-    super(name, health, attackPower);
-    this.armor = 10;
-    this.rage = 0;
+function playerAction(skill) {
+  if (isGameOver) return;
+
+  if (skill === 'fireball') {
+    if (mage.mp < 20) return alert('마나가 부족합니다!');
+    mage.mp -= 20;
+    const dmg = Math.floor(Math.random() * 15) + 18;
+    warrior.hp = Math.max(0, warrior.hp - dmg);
+    warrior.rage = Math.min(100, warrior.rage + 25);
+    log(`🔥 마법사가 파이어볼을 날려 전사에게 <b>${dmg}</b>의 피해를 입혔습니다!`);
+  } else if (skill === 'thunder') {
+    if (mage.mp < 30) return alert('마나가 부족합니다!');
+    mage.mp -= 30;
+    const dmg = Math.floor(Math.random() * 20) + 25;
+    warrior.hp = Math.max(0, warrior.hp - dmg);
+    warrior.rage = Math.min(100, warrior.rage + 35);
+    log(`⚡ 썬더 스트라이크 적중! 전사에게 <b>${dmg}</b>의 강력한 피해!`);
+  } else if (skill === 'heal') {
+    if (mage.mp < 25) return alert('마나가 부족합니다!');
+    mage.mp -= 25;
+    const heal = 30;
+    mage.hp = Math.min(mage.maxHp, mage.hp + heal);
+    log(`💚 마법사가 치유 마법으로 체력을 <b>${heal}</b> 회복했습니다.`);
+  } else if (skill === 'meditate') {
+    mage.mp = Math.min(mage.maxMp, mage.mp + 35);
+    log(`✨ 명상을 통해 마나를 <b>35</b> 회복했습니다.`);
   }
-  
-  takeDamage(amount) {
-    const reduceDamage = Math.max(amount - this.armor, 1);
-    this.rage = Math.min(this.rage +10, 100);
-    log(`🛡️  ${this.name}'s armor absorbs ${amount - reduceDamage} damage! (Rage: ${this.rage}/100)`);
-    super.takeDamage(reduceDamage);
+
+  updateUI();
+  if (checkWinner()) return;
+
+  // 0.6초 뒤 전사 반격
+  setTimeout(warriorTurn, 600);
+}
+
+function warriorTurn() {
+  if (isGameOver) return;
+
+  if (warrior.rage >= 100) {
+    warrior.rage = 0;
+    const dmg = 40;
+    mage.hp = Math.max(0, mage.hp - dmg);
+    log(`💥 전사의 분노 폭발! 파워 스트라이크로 마법사에게 <b>${dmg}</b>의 치명타!`);
+  } else {
+    const dmg = Math.floor(Math.random() * 12) + 12;
+    mage.hp = Math.max(0, mage.hp - dmg);
+    warrior.rage = Math.min(100, warrior.rage + 20);
+    log(`⚔️ 전사가 검을 휘둘러 마법사에게 <b>${dmg}</b>의 피해를 입혔습니다.`);
   }
-  
-  powerStrike(target) {
-    if (this.rage < 30) {
-      console.log(`${this.name} doesn't have enough rage! (${this.rage}/100)`);
-      return;
-    }
-    const bonusDamage = Math.floor(this.rage/2);
-    this.rage -= 30;
-    log(`⚔️  ${this.name} uses Power Strike on ${target.name}!`);
-    target.takeDamage(this.attackPower + bonusDamage);
-  }
-  getStatus() {
-    return super.getStatus() + ` | Armor: ${this.armor} | Rage: ${this.rage}/100`;
-  }
+
+  updateUI();
+  checkWinner();
 }
 
-const m = new Mage("Nuwa", 125, 35);
-const w = new Warrior("Nezha", 150, 25);
-
-while (m.isAlive && w.isAlive) {
-  
-  getBothStatus();
-  rerollAll();
-  if (battle()) break;
-}
-
-function reroll(target) {
-  target.probability = Math.floor(Math.random() * 3);
-}
-
-function rerollAll() {
-  reroll(w);
-  reroll(m);
-}
-
-function getBothStatus() {
-  log(m.getStatus());
-  (w.getStatus());
-}
-
-function healChance() {
-  if (w.probability === 2) {
-  w.heal(Math.floor(10 + Math.random() * 35));
-} else if (m.probability === 1) {
-  m.heal(Math.floor(10 + Math.random() * 30))
-  }
-}
-
-function battle() {
-  m.attack(w);
-  if (checkDeath(m, w)) 
+function checkWinner() {
+  if (warrior.hp <= 0) {
+    log(`🎉 <b>승리! 마법사가 전사를 쓰러뜨렸습니다!</b>`);
+    endGame();
     return true;
-  if (w.rage >= 30) {
-  w.powerStrike(m);
-} else {
-  w.attack(m);
   }
-  if (checkDeath(w, m))
-    return true;
-  healChance();
-  regenMana();
-  return false;
-}
-
-function regenMana() {
-  m.mana = Math.min(m.mana + 2, 100);
-  log(`${m.name} regenerated mana.\nMana: ↑${m.mana}/100`);
-}
-
-function checkDeath(attacker, defender) {
-  if (!defender.isAlive) {
-    log(`${attacker.name} Wins!`);
+  if (mage.hp <= 0) {
+    log(`💀 <b>패배... 전사에게 쓰러졌습니다.</b>`);
+    endGame();
     return true;
   }
   return false;
 }
+
+function endGame() {
+  isGameOver = true;
+  document.getElementById('controls').style.display = 'none';
+  document.getElementById('restart-btn').style.display = 'inline-block';
+}
+
+function resetGame() {
+  mage = { hp: 100, maxHp: 100, mp: 100, maxMp: 100 };
+  warrior = { hp: 130, maxHp: 130, rage: 0, maxRage: 100 };
+  isGameOver = false;
+  document.getElementById('battle-log').innerHTML = '';
+  document.getElementById('controls').style.display = 'block';
+  document.getElementById('restart-btn').style.display = 'none';
+  updateUI();
+  log('⚔️ 새로운 전투가 시작되었습니다! 스킬을 선택하세요.');
+}
+
+resetGame();
