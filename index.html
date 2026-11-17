@@ -7,162 +7,262 @@
 </head>
 <body>
   <div class="game-container">
-    <h1>⚔️ 초등영어 RPG 📚</h1>
-    <p class="subtitle">영웅을 레벨업하고 무기를 강화하며 2022 개정 초등 영단어를 마스터하세요!</p>
+    <!-- 상단 게임 HUD 헤더 -->
+    <header class="game-hud">
+      <div class="hud-left">
+        <span class="game-logo">⚔️ 초등영어 RPG</span>
+        <span class="stage-pill" id="hud-stage">STAGE 1</span>
+      </div>
+      <div class="hud-right">
+        <span class="gold-pill">💰 <span id="hud-gold">50</span>G</span>
+        <button class="hud-btn forge" onclick="openForgeModal()">🔨 대장간</button>
+        <button class="hud-btn avatar-shop" onclick="openAvatarModal()">👗 아바타</button>
+        <button class="hud-btn dex" onclick="openDexModal()">📖 도감 (<span id="hud-dex">0</span>)</button>
+      </div>
+    </header>
 
-    <!-- 학습 범위 & 영웅 선택 패널 -->
-    <div class="selector-panel" id="selector-panel">
-      <div class="hero-select-box">
-        <label>0. 나의 영웅 직업 선택 (현재: Lv.<span id="menu-hero-lv">1</span> | 무기 +<span id="menu-weapon-lv">0</span>)</label>
+    <!-- 1. 메인 로비 (직업 & 교과서 선택 화면) -->
+    <div class="lobby-panel" id="selector-panel">
+      <div class="lobby-hero-banner">
+        <div class="lobby-char-preview float-anim" id="lobby-hero-art"></div>
+        <div class="lobby-hero-info">
+          <div class="badge-row">
+            <span class="lv-badge">Lv.<span id="menu-hero-lv">1</span></span>
+            <span class="tier-badge" id="menu-avatar-tier">초보 모험가 복장</span>
+          </div>
+          <h2 id="menu-hero-title">바람의 궁수</h2>
+          <p class="weapon-info" id="menu-weapon-info">🏹 참나무 활 (+0) · 공격력 +0</p>
+          <div class="lobby-shop-shortcuts">
+            <button type="button" class="sub-action-btn" onclick="openForgeModal()">🔨 대장간에서 무기 강화</button>
+            <button type="button" class="sub-action-btn" onclick="openAvatarModal()">👗 아바타 의상 업그레이드</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <label class="step-title">STEP 1. 영웅 직업 선택</label>
         <div class="hero-options">
-          <button type="button" class="hero-btn active" id="hero-mage" onclick="selectHero('mage')">
-            <div class="mini-art" id="preview-mage"></div>
-            마법사<br><small>스킬 공격력 +5</small>
+          <button type="button" class="hero-btn active" id="hero-archer" onclick="selectHero('archer')">
+            <span class="job-icon">🏹</span>
+            <strong>바람의 궁수</strong>
+            <small>치명타 확률 2배</small>
           </button>
-          <button type="button" class="hero-btn" id="hero-archer" onclick="selectHero('archer')">
-            <div class="mini-art" id="preview-archer"></div>
-            궁수<br><small>치명타 확률 2배</small>
+          <button type="button" class="hero-btn" id="hero-mage" onclick="selectHero('mage')">
+            <span class="job-icon">🧙‍♀️</span>
+            <strong>영어 마법사</strong>
+            <small>스킬 공격력 +5</small>
           </button>
           <button type="button" class="hero-btn" id="hero-paladin" onclick="selectHero('paladin')">
-            <div class="mini-art" id="preview-paladin"></div>
-            성기사<br><small>받는 피해 -4 감소</small>
+            <span class="job-icon">🛡️</span>
+            <strong>빛의 성기사</strong>
+            <small>받는 피해 -4 감소</small>
           </button>
         </div>
       </div>
 
-      <div class="select-grid">
-        <div class="select-group">
-          <label for="grade-select">1. 학년 선택</label>
+      <div class="step-box">
+        <label class="step-title">STEP 2. 학습할 학년 · 출판사 · 단원 선택</label>
+        <div class="select-grid-3">
           <select id="grade-select" onchange="onGradeChange()">
             <option value="3학년">초등학교 3학년</option>
             <option value="4학년">초등학교 4학년</option>
             <option value="5학년">초등학교 5학년</option>
             <option value="6학년">초등학교 6학년</option>
           </select>
-        </div>
-
-        <div class="select-group">
-          <label for="pub-select">2. 교과서(출판사)</label>
           <select id="pub-select" onchange="onPubChange()"></select>
+          <select id="lesson-select" onchange="onLessonChange()"></select>
         </div>
+        <div class="word-count-tag" id="word-count-info">출제 가능 어휘: 0개</div>
       </div>
 
-      <div class="select-group">
-        <label for="lesson-select">3. 단원 선택</label>
-        <select id="lesson-select" onchange="onLessonChange()"></select>
-      </div>
-
-      <div class="status-summary-bar">
-        <span id="word-count-info">출제 가능 어휘: 0개</span>
-        <span id="menu-gold-info">💰 보유 골드: 50G</span>
-        <span id="collection-summary">📖 도감 수집: 0개</span>
-      </div>
-
-      <button class="start-btn" onclick="startGame()">⚔️ 선택한 범위로 모험 시작!</button>
+      <button class="start-btn" onclick="startGame()">⚔️ 모험 출발하기!</button>
     </div>
 
-    <!-- 실제 게임 전투 화면 -->
+    <!-- 2. 실제 전투 스테이지 화면 -->
     <div id="game-screen" style="display:none;">
-      <!-- 상단 정보 바 -->
-      <div class="current-badge-bar">
+      <div class="battle-topbar">
         <span id="current-scope-badge" class="scope-badge">3학년 | YBM(최) | Lesson 1</span>
-        <div class="top-stats">
-          <span class="gold-badge">💰 <span id="gold-text">50</span>G</span>
+        <div class="status-pills">
           <span id="combo-badge" class="combo-badge" style="display:none;">🔥 0 COMBO</span>
-          <span id="fever-badge" class="fever-badge" style="display:none;">🌟 FEVER (MP 0)!</span>
+          <span id="fever-badge" class="fever-badge" style="display:none;">🌟 FEVER (MP 0)</span>
         </div>
-        <button class="change-scope-btn" onclick="backToMenu()">🔄 메뉴로</button>
+        <button class="menu-return-btn" onclick="backToMenu()">🏠 로비로</button>
       </div>
 
-      <!-- 전투 아레나 -->
+      <!-- 배틀 필드 -->
       <div class="battle-arena">
-        <!-- 플레이어 카드 -->
-        <div class="character-card mage" id="mage-card">
-          <div class="level-tag">Lv.<span id="hero-lv-text">1</span> <span id="hero-title">바람의 궁수</span></div>
-          <div class="char-illustration float-anim" id="hero-art-box"></div>
-          
-          <!-- 장착 무기 표시 -->
-          <div class="weapon-tag" id="weapon-tag">🏹 참나무 활 (+0)</div>
+        <!-- 아군 영웅 카드 -->
+        <div class="fighter-card hero-side" id="mage-card">
+          <div class="card-header-tag">
+            <span>Lv.<strong id="hero-lv-text">1</strong> <span id="hero-title">바람의 궁수</span></span>
+          </div>
+          <div class="char-stage float-anim" id="hero-art-box"></div>
+          <div class="equip-pill" id="weapon-tag">🏹 참나무 활 (+0)</div>
 
-          <div class="bar-label">HP: <span id="mage-hp-text">100</span>/<span id="mage-maxhp-text">100</span></div>
-          <div class="bar-bg"><div id="mage-hp-bar" class="bar hp"></div></div>
-          
-          <div class="bar-label">MP: <span id="mage-mp-text">100</span>/<span id="mage-maxmp-text">100</span></div>
-          <div class="bar-bg"><div id="mage-mp-bar" class="bar mp"></div></div>
+          <div class="stat-bars">
+            <div class="bar-row">
+              <span>HP</span>
+              <div class="bar-bg"><div id="mage-hp-bar" class="bar hp"></div></div>
+              <small><span id="mage-hp-text">100</span>/<span id="mage-maxhp-text">100</span></small>
+            </div>
+            <div class="bar-row">
+              <span>MP</span>
+              <div class="bar-bg"><div id="mage-mp-bar" class="bar mp"></div></div>
+              <small><span id="mage-mp-text">100</span>/<span id="mage-maxmp-text">100</span></small>
+            </div>
+            <div class="bar-row">
+              <span>EXP</span>
+              <div class="bar-bg"><div id="hero-exp-bar" class="bar exp"></div></div>
+              <small><span id="hero-exp-text">0</span>/<span id="hero-maxexp-text">100</span></small>
+            </div>
+          </div>
 
-          <div class="bar-label">EXP: <span id="hero-exp-text">0</span>/<span id="hero-maxexp-text">100</span></div>
-          <div class="bar-bg"><div id="hero-exp-bar" class="bar exp"></div></div>
-          
-          <!-- 동료 펫 상태 -->
-          <div class="pet-box">
+          <div class="pet-companion">
             <span id="pet-icon">🥚</span> <span id="pet-name">신비한 알</span> (Lv.<span id="pet-lv">1</span>)
           </div>
         </div>
 
-        <div class="vs">VS</div>
+        <div class="vs-emblem">VS</div>
 
-        <!-- 몬스터 카드 -->
-        <div class="character-card warrior" id="warrior-card">
+        <!-- 적 보스 몬스터 카드 -->
+        <div class="fighter-card monster-side" id="warrior-card">
           <div class="speech-bubble" id="monster-speech">덤벼라, 꼬마 영웅!</div>
-          <div class="char-illustration float-anim-delay" id="monster-art-box"></div>
-          <h2 id="monster-name">슬라임 킹</h2>
-          <div class="bar-label">HP: <span id="warrior-hp-text">110</span>/<span id="warrior-maxhp-text">110</span></div>
-          <div class="bar-bg"><div id="warrior-hp-bar" class="bar hp"></div></div>
-          <div class="bar-label">분노: <span id="warrior-rage-text">0</span>/100</div>
-          <div class="bar-bg"><div id="warrior-rage-bar" class="bar rage"></div></div>
+          <div class="char-stage float-anim-delay" id="monster-art-box"></div>
+          <h3 class="monster-title" id="monster-name">STAGE 1 · 슬라임 킹</h3>
+
+          <div class="stat-bars">
+            <div class="bar-row">
+              <span>HP</span>
+              <div class="bar-bg"><div id="warrior-hp-bar" class="bar enemy-hp"></div></div>
+              <small><span id="warrior-hp-text">110</span>/<span id="warrior-maxhp-text">110</span></small>
+            </div>
+            <div class="bar-row">
+              <span>분노</span>
+              <div class="bar-bg"><div id="warrior-rage-bar" class="bar rage"></div></div>
+              <small><span id="warrior-rage-text">0</span>/100</small>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- 대장간(무기 업그레이드) & 아이템 상점 바 -->
-      <div class="item-shop-bar" id="item-shop-bar">
-        <button class="forge-btn" onclick="upgradeWeapon()">🔨 무기 강화 (<span id="forge-cost-text">40</span>G)</button>
-        <button onclick="buyAndUseItem('potion')" title="체력 +45 회복">🧪 체력물약 (30G)</button>
-        <button onclick="buyAndUseItem('double')" title="다음 공격 데미지 2배">📜 더블공격 (40G)</button>
-        <button onclick="openDexModal()">📖 도감 (<span id="dex-count-btn">0</span>)</button>
-      </div>
-
-      <!-- 영어 퀴즈 출제 영역 -->
+      <!-- 영어 퀴즈 배틀 패널 -->
       <div id="quiz-box" class="quiz-box" style="display:none;">
         <div class="timer-bar-bg"><div id="timer-bar" class="timer-bar"></div></div>
         <div class="quiz-header">
-          <span class="quiz-badge" id="quiz-skill-name">🔥 파이어볼 영창</span>
-          <button class="tts-btn" id="tts-btn" onclick="speakCurrentWord()">🔊 발음 듣기</button>
+          <span class="quiz-badge" id="quiz-skill-name">🔥 기본 공격 퀴즈</span>
+          <button class="tts-btn" onclick="speakCurrentWord()">🔊 발음 듣기</button>
           <button class="hint-btn" id="hint-btn" onclick="useHintMagnifier()">🔍 힌트 (20G)</button>
         </div>
         <div class="quiz-pos" id="quiz-pos">[명사]</div>
         <h3 id="quiz-question">문제 텍스트</h3>
-        
         <div id="quiz-options" class="quiz-options"></div>
-
         <div id="spelling-box" class="spelling-box" style="display:none;">
           <input type="text" id="spelling-input" placeholder="영어 철자를 입력하세요" autocomplete="off" onkeydown="if(event.key==='Enter') submitSpelling()">
           <button onclick="submitSpelling()">⚡ 주문 발사!</button>
         </div>
       </div>
 
-      <!-- 스킬 조작 버튼 -->
-      <div class="controls" id="controls">
-        <button onclick="openQuiz('fireball')">🔥 기본 공격 (뜻 / MP 20)</button>
-        <button onclick="openQuiz('thunder')">⚡ 필살기 (철자 / MP 30)</button>
-        <button onclick="openQuiz('heal')">💚 힐링 (뜻 / MP 25)</button>
-        <button onclick="openQuiz('meditate')">✨ 명상 (+40 MP)</button>
+      <!-- 직관적인 RPG 스킬 & 퀵 아이템 커맨드 보드 -->
+      <div id="controls">
+        <div class="skill-grid">
+          <button class="skill-card atk" onclick="openQuiz('fireball')">
+            <span class="sk-icon">🔥</span>
+            <strong>기본 공격</strong>
+            <small>단어 뜻 퀴즈 · MP 20</small>
+          </button>
+          <button class="skill-card ult" onclick="openQuiz('thunder')">
+            <span class="sk-icon">⚡</span>
+            <strong>필살기 강타</strong>
+            <small>철자 입력 · MP 30</small>
+          </button>
+          <button class="skill-card heal" onclick="openQuiz('heal')">
+            <span class="sk-icon">💚</span>
+            <strong>치유 마법</strong>
+            <small>단어 뜻 퀴즈 · MP 25</small>
+          </button>
+          <button class="skill-card mp" onclick="openQuiz('meditate')">
+            <span class="sk-icon">✨</span>
+            <strong>마나 명상</strong>
+            <small>MP +40 회복</small>
+          </button>
+        </div>
+
+        <div class="quick-belt">
+          <span class="belt-label">🎒 퀵 아이템:</span>
+          <button onclick="buyAndUseItem('potion')">🧪 체력물약 (+45 HP / 30G)</button>
+          <button onclick="buyAndUseItem('double')">📜 더블데미지 (2배 공격 / 40G)</button>
+        </div>
       </div>
 
-      <!-- 전투 종료 후 오답 노트 및 재시작 -->
+      <!-- 전투 종료 결과 패널 -->
       <div id="result-panel" class="result-panel" style="display:none;">
         <div id="wrong-notes-box" class="wrong-notes-box"></div>
-        <button id="restart-btn" class="restart-btn" onclick="startGame()">🔄 다음 스테이지(다시 싸우기)</button>
+        <div class="result-actions">
+          <button id="restart-btn" class="restart-btn" onclick="startGame()">🚀 다음 스테이지 도전!</button>
+          <button class="sub-action-btn" onclick="openForgeModal()">🔨 대장간 무기 강화</button>
+          <button class="sub-action-btn" onclick="openAvatarModal()">👗 아바타 업그레이드</button>
+        </div>
       </div>
 
-      <!-- 전투 로그 -->
+      <!-- 실시간 전투 로그 -->
       <div id="battle-log" class="battle-log"></div>
     </div>
 
-    <!-- 단어 도감 모달 -->
+    <!-- 🔨 대장간 (무기 업그레이드) 모달 -->
+    <div id="forge-modal" class="modal-overlay" style="display:none;">
+      <div class="modal-content shop-modal">
+        <div class="modal-header">
+          <h3>🔨 왕국 대장간 · 무기 강화</h3>
+          <button onclick="closeForgeModal()">✖</button>
+        </div>
+        <div class="shop-body">
+          <div class="shop-preview-box">
+            <div class="weapon-emblem" id="forge-weapon-icon">🏹</div>
+            <h4 id="forge-weapon-name">참나무 활 (+0)</h4>
+            <p class="grade-tag" id="forge-weapon-grade">등급: 일반 무기</p>
+          </div>
+          <div class="stat-compare">
+            <div>현재 추가 공격력: <strong>+<span id="forge-cur-atk">0</span></strong></div>
+            <div class="arrow-up">⬇️ 강화 시 ⬇️</div>
+            <div class="next-stat">다음 추가 공격력: <strong>+<span id="forge-next-atk">5</span></strong></div>
+          </div>
+          <button class="upgrade-big-btn" id="forge-upgrade-btn" onclick="upgradeWeapon()">
+            🔨 무기 강화하기 (<span id="forge-cost-text">40</span>G)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 👗 아바타 상점 (외형 & 방어구 업그레이드) 모달 -->
+    <div id="avatar-modal" class="modal-overlay" style="display:none;">
+      <div class="modal-content shop-modal">
+        <div class="modal-header">
+          <h3>👗 영웅 아바타 & 의상 업그레이드</h3>
+          <button onclick="closeAvatarModal()">✖</button>
+        </div>
+        <div class="shop-body">
+          <div class="shop-preview-box">
+            <div class="avatar-preview-art" id="avatar-modal-art"></div>
+            <h4 id="avatar-tier-name">Tier 1 · 초보 모험가 복장</h4>
+            <p class="grade-tag" id="avatar-tier-desc">기본 모험가 의상입니다.</p>
+          </div>
+          <div class="stat-compare">
+            <div>현재 보너스: <strong>최대 HP +<span id="av-cur-hp">0</span> / 방어력 +<span id="av-cur-def">0</span></strong></div>
+            <div class="arrow-up">⬇️ 업그레이드 시 ⬇️</div>
+            <div class="next-stat" id="av-next-box">다음 보너스: <strong>최대 HP +<span id="av-next-hp">25</span> / 방어력 +<span id="av-next-def">2</span></strong></div>
+          </div>
+          <button class="upgrade-big-btn avatar-btn" id="avatar-upgrade-btn" onclick="upgradeAvatar()">
+            ✨ 아바타 의상 진화하기 (<span id="avatar-cost-text">60</span>G)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📖 황금 단어 도감 모달 -->
     <div id="dex-modal" class="modal-overlay" style="display:none;">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>📖 황금 단어 도감 (수집한 영단어)</h3>
+          <h3>📖 황금 단어 도감 (클릭하면 원어민 발음 재생)</h3>
           <button onclick="closeDexModal()">✖</button>
         </div>
         <div id="dex-grid" class="dex-grid"></div>
