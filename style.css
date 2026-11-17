@@ -23,7 +23,7 @@ body {
   font-size: 14px;
 }
 
-/* 학년/교과서/단원 선택 화면 */
+/* 선택 패널 */
 .selector-panel {
   background: #0f3460;
   padding: 25px;
@@ -32,10 +32,7 @@ body {
   text-align: left;
 }
 
-.select-group {
-  margin-bottom: 16px;
-}
-
+.select-group { margin-bottom: 16px; }
 .select-group label {
   display: block;
   font-weight: bold;
@@ -74,10 +71,9 @@ body {
   font-weight: bold;
   cursor: pointer;
 }
-
 .start-btn:hover { background: #ff2e63; }
 
-/* 상단 현재 단원 표시줄 */
+/* 상단 바 */
 .current-badge-bar {
   display: flex;
   justify-content: space-between;
@@ -86,12 +82,17 @@ body {
   padding: 10px 15px;
   border-radius: 8px;
   margin-top: 15px;
+  gap: 8px;
 }
 
-.scope-badge {
+.scope-badge { font-weight: bold; color: #4ecca3; font-size: 14px; }
+.combo-badge {
+  background: #ff9800;
+  color: #1a1a2e;
   font-weight: bold;
-  color: #4ecca3;
-  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
 }
 
 .change-scope-btn {
@@ -103,7 +104,6 @@ body {
   font-size: 13px;
   cursor: pointer;
 }
-
 .change-scope-btn:hover { background: #4ecca3; color: #1a1a2e; }
 
 .battle-arena {
@@ -118,6 +118,20 @@ body {
   padding: 18px;
   border-radius: 12px;
   width: 40%;
+  transition: transform 0.1s;
+}
+
+/* 피격 시 흔들림 효과 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
+}
+.shake {
+  animation: shake 0.4s ease-in-out;
+  box-shadow: 0 0 18px #ff2e63;
 }
 
 .avatar { font-size: 55px; margin-bottom: 8px; }
@@ -131,7 +145,6 @@ body {
   overflow: hidden;
   margin-top: 4px;
 }
-
 .bar { height: 100%; width: 100%; transition: width 0.3s ease; }
 .hp { background: #4caf50; }
 .mp { background: #2196f3; }
@@ -146,21 +159,35 @@ body {
   margin: 15px 0;
 }
 
+.quiz-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
 .quiz-badge {
-  display: inline-block;
   background: #e94560;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: bold;
-  margin-bottom: 6px;
 }
 
-.quiz-pos {
-  color: #ffd369;
-  font-size: 13px;
-  margin-bottom: 4px;
+.tts-btn {
+  background: #4ecca3;
+  color: #1a1a2e;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
 }
+.tts-btn:hover { background: #38b28a; }
+
+.quiz-pos { color: #ffd369; font-size: 13px; margin-bottom: 4px; }
 
 .quiz-options {
   display: grid;
@@ -178,29 +205,73 @@ body {
   font-size: 15px;
   cursor: pointer;
 }
-
 .quiz-options button:hover {
   background: #4ecca3;
   color: #1a1a2e;
   font-weight: bold;
 }
 
+/* 주관식 스펠링 입력창 */
+.spelling-box {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.spelling-box input {
+  padding: 10px 14px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 2px solid #4ecca3;
+  background: #0f3460;
+  color: white;
+  width: 60%;
+  text-align: center;
+}
+.spelling-box button {
+  background: #ffd369;
+  color: #1a1a2e;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
 .controls button, .restart-btn {
   background: #e94560;
   color: white;
   border: none;
-  padding: 12px 16px;
+  padding: 12px 14px;
   margin: 5px;
   border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
   font-weight: bold;
 }
-
 .controls button:hover, .restart-btn:hover { background: #ff2e63; }
 
+/* 오답 노트 패널 */
+.result-panel {
+  margin-top: 15px;
+}
+.wrong-notes-box {
+  background: #0f3460;
+  border: 1px solid #ffd369;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  text-align: left;
+  font-size: 14px;
+}
+.wrong-notes-box h4 {
+  margin: 0 0 8px 0;
+  color: #ffd369;
+}
+
 .battle-log {
-  margin-top: 18px;
+  margin-top: 16px;
   background: #0b132b;
   height: 150px;
   overflow-y: auto;
