@@ -2,48 +2,90 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>마법사 vs 전사 RPG</title>
+  <title>2022 개정 초등 영어 배틀 RPG</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="game-container">
-    <h1>⚔️ 마법사 vs 전사 🔮</h1>
+    <h1>📚 2022 개정 초등 영어 배틀 RPG ⚔️</h1>
+    <p class="subtitle">학년·교과서·단원을 선택하고 영어 문제를 맞혀 적을 물리치세요!</p>
 
-    <!-- 캐릭터 상태 창 -->
-    <div class="battle-arena">
-      <div class="character-card mage">
-        <div class="avatar">🧙‍♀️</div>
-        <h2>마법사 (Nuwa)</h2>
-        <div class="bar-label">HP: <span id="mage-hp-text">100</span>/100</div>
-        <div class="bar-bg"><div id="mage-hp-bar" class="bar hp"></div></div>
-        <div class="bar-label">MP: <span id="mage-mp-text">100</span>/100</div>
-        <div class="bar-bg"><div id="mage-mp-bar" class="bar mp"></div></div>
+    <!-- 학습 범위 선택 패널 -->
+    <div class="selector-panel" id="selector-panel">
+      <div class="select-group">
+        <label for="grade-select">1. 학년 선택</label>
+        <select id="grade-select" onchange="onGradeChange()">
+          <option value="3학년">초등학교 3학년</option>
+          <option value="4학년">초등학교 4학년</option>
+          <option value="5학년">초등학교 5학년</option>
+          <option value="6학년">초등학교 6학년</option>
+        </select>
       </div>
 
-      <div class="vs">VS</div>
-
-      <div class="character-card warrior">
-        <div class="avatar">🛡️</div>
-        <h2>전사 (Nezha)</h2>
-        <div class="bar-label">HP: <span id="warrior-hp-text">130</span>/130</div>
-        <div class="bar-bg"><div id="warrior-hp-bar" class="bar hp"></div></div>
-        <div class="bar-label">분노: <span id="warrior-rage-text">0</span>/100</div>
-        <div class="bar-bg"><div id="warrior-rage-bar" class="bar rage"></div></div>
+      <div class="select-group">
+        <label for="pub-select">2. 교과서(출판사)</label>
+        <select id="pub-select" onchange="onPubChange()"></select>
       </div>
+
+      <div class="select-group">
+        <label for="lesson-select">3. 단원 선택</label>
+        <select id="lesson-select" onchange="onLessonChange()"></select>
+      </div>
+
+      <div class="word-count-info" id="word-count-info">출제 가능 어휘: 0개</div>
+      <button class="start-btn" onclick="startGame()">⚔️ 선택한 범위로 배틀 시작!</button>
     </div>
 
-    <!-- 스킬 조작 버튼 -->
-    <div class="controls" id="controls">
-      <button onclick="playerAction('fireball')">🔥 파이어볼 (MP 20)</button>
-      <button onclick="playerAction('thunder')">⚡ 썬더 스트라이크 (MP 30)</button>
-      <button onclick="playerAction('heal')">💚 힐링 (MP 25)</button>
-      <button onclick="playerAction('meditate')">✨ 마나 회복 (+35 MP)</button>
+    <!-- 실제 게임 전투 화면 (시작 후 표시) -->
+    <div id="game-screen" style="display:none;">
+      <div class="current-badge-bar">
+        <span id="current-scope-badge" class="scope-badge">3학년 | YBM(최) | 3-1-L1</span>
+        <button class="change-scope-btn" onclick="backToMenu()">🔄 학년/단원 변경</button>
+      </div>
+
+      <div class="battle-arena">
+        <div class="character-card mage">
+          <div class="avatar">🧙‍♀️</div>
+          <h2>영어 마법사</h2>
+          <div class="bar-label">HP: <span id="mage-hp-text">100</span>/100</div>
+          <div class="bar-bg"><div id="mage-hp-bar" class="bar hp"></div></div>
+          <div class="bar-label">MP: <span id="mage-mp-text">100</span>/100</div>
+          <div class="bar-bg"><div id="mage-mp-bar" class="bar mp"></div></div>
+        </div>
+
+        <div class="vs">VS</div>
+
+        <div class="character-card warrior">
+          <div class="avatar">🛡️</div>
+          <h2>어둠의 전사</h2>
+          <div class="bar-label">HP: <span id="warrior-hp-text">130</span>/130</div>
+          <div class="bar-bg"><div id="warrior-hp-bar" class="bar hp"></div></div>
+          <div class="bar-label">분노: <span id="warrior-rage-text">0</span>/100</div>
+          <div class="bar-bg"><div id="warrior-rage-bar" class="bar rage"></div></div>
+        </div>
+      </div>
+
+      <!-- 영어 퀴즈 출제 영역 -->
+      <div id="quiz-box" class="quiz-box" style="display:none;">
+        <div class="quiz-badge" id="quiz-skill-name">🔥 파이어볼 주문 영창</div>
+        <div class="quiz-pos" id="quiz-pos">[명사]</div>
+        <h3 id="quiz-question">문제 텍스트</h3>
+        <div id="quiz-options" class="quiz-options"></div>
+      </div>
+
+      <!-- 스킬 조작 버튼 -->
+      <div class="controls" id="controls">
+        <button onclick="openQuiz('fireball')">🔥 파이어볼 (MP 20)</button>
+        <button onclick="openQuiz('thunder')">⚡ 썬더 스트라이크 (MP 30)</button>
+        <button onclick="openQuiz('heal')">💚 힐링 (MP 25)</button>
+        <button onclick="openQuiz('meditate')">✨ 마나 회복 (+40 MP)</button>
+      </div>
+
+      <button id="restart-btn" class="restart-btn" onclick="startGame()" style="display:none;">🔄 같은 단원 다시 싸우기</button>
+
+      <!-- 전투 로그 -->
+      <div id="battle-log" class="battle-log"></div>
     </div>
-
-    <button id="restart-btn" class="restart-btn" onclick="resetGame()" style="display:none;">🔄 다시 싸우기</button>
-
-    <!-- 전투 로그 -->
-    <div id="battle-log" class="battle-log"></div>
   </div>
 
   <script src="game.js"></script>
