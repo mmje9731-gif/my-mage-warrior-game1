@@ -8,21 +8,24 @@
 <body>
   <div class="game-container">
     <h1>⚔️ 초등영어 RPG 📚</h1>
-    <p class="subtitle">영웅과 교과서를 선택하고, 펫과 함께 몬스터를 물리치세요!</p>
+    <p class="subtitle">영웅을 레벨업하고 무기를 강화하며 2022 개정 초등 영단어를 마스터하세요!</p>
 
     <!-- 학습 범위 & 영웅 선택 패널 -->
     <div class="selector-panel" id="selector-panel">
       <div class="hero-select-box">
-        <label>0. 나의 영웅 직업 선택</label>
+        <label>0. 나의 영웅 직업 선택 (현재: Lv.<span id="menu-hero-lv">1</span> | 무기 +<span id="menu-weapon-lv">0</span>)</label>
         <div class="hero-options">
           <button type="button" class="hero-btn active" id="hero-mage" onclick="selectHero('mage')">
-            🧙‍♀️ 마법사<br><small>스킬 공격력 +5</small>
+            <div class="mini-art" id="preview-mage"></div>
+            마법사<br><small>스킬 공격력 +5</small>
           </button>
           <button type="button" class="hero-btn" id="hero-archer" onclick="selectHero('archer')">
-            🏹 궁수<br><small>치명타 확률 2배</small>
+            <div class="mini-art" id="preview-archer"></div>
+            궁수<br><small>치명타 확률 2배</small>
           </button>
           <button type="button" class="hero-btn" id="hero-paladin" onclick="selectHero('paladin')">
-            🛡️ 성기사<br><small>받는 피해 -4 감소</small>
+            <div class="mini-art" id="preview-paladin"></div>
+            성기사<br><small>받는 피해 -4 감소</small>
           </button>
         </div>
       </div>
@@ -51,6 +54,7 @@
 
       <div class="status-summary-bar">
         <span id="word-count-info">출제 가능 어휘: 0개</span>
+        <span id="menu-gold-info">💰 보유 골드: 50G</span>
         <span id="collection-summary">📖 도감 수집: 0개</span>
       </div>
 
@@ -74,12 +78,20 @@
       <div class="battle-arena">
         <!-- 플레이어 카드 -->
         <div class="character-card mage" id="mage-card">
-          <div class="avatar" id="hero-avatar">🧙‍♀️</div>
-          <h2 id="hero-title">영어 마법사</h2>
-          <div class="bar-label">HP: <span id="mage-hp-text">100</span>/100</div>
+          <div class="level-tag">Lv.<span id="hero-lv-text">1</span> <span id="hero-title">바람의 궁수</span></div>
+          <div class="char-illustration float-anim" id="hero-art-box"></div>
+          
+          <!-- 장착 무기 표시 -->
+          <div class="weapon-tag" id="weapon-tag">🏹 참나무 활 (+0)</div>
+
+          <div class="bar-label">HP: <span id="mage-hp-text">100</span>/<span id="mage-maxhp-text">100</span></div>
           <div class="bar-bg"><div id="mage-hp-bar" class="bar hp"></div></div>
-          <div class="bar-label">MP: <span id="mage-mp-text">100</span>/100</div>
+          
+          <div class="bar-label">MP: <span id="mage-mp-text">100</span>/<span id="mage-maxmp-text">100</span></div>
           <div class="bar-bg"><div id="mage-mp-bar" class="bar mp"></div></div>
+
+          <div class="bar-label">EXP: <span id="hero-exp-text">0</span>/<span id="hero-maxexp-text">100</span></div>
+          <div class="bar-bg"><div id="hero-exp-bar" class="bar exp"></div></div>
           
           <!-- 동료 펫 상태 -->
           <div class="pet-box">
@@ -92,21 +104,21 @@
         <!-- 몬스터 카드 -->
         <div class="character-card warrior" id="warrior-card">
           <div class="speech-bubble" id="monster-speech">덤벼라, 꼬마 영웅!</div>
-          <div class="avatar" id="monster-avatar">🟢</div>
+          <div class="char-illustration float-anim-delay" id="monster-art-box"></div>
           <h2 id="monster-name">슬라임 킹</h2>
-          <div class="bar-label">HP: <span id="warrior-hp-text">130</span>/<span id="warrior-maxhp-text">130</span></div>
+          <div class="bar-label">HP: <span id="warrior-hp-text">110</span>/<span id="warrior-maxhp-text">110</span></div>
           <div class="bar-bg"><div id="warrior-hp-bar" class="bar hp"></div></div>
           <div class="bar-label">분노: <span id="warrior-rage-text">0</span>/100</div>
           <div class="bar-bg"><div id="warrior-rage-bar" class="bar rage"></div></div>
         </div>
       </div>
 
-      <!-- 미니 상점 (아이템 사용 바) -->
+      <!-- 대장간(무기 업그레이드) & 아이템 상점 바 -->
       <div class="item-shop-bar" id="item-shop-bar">
-        <span class="shop-title">🎒 상점/아이템:</span>
-        <button onclick="buyAndUseItem('potion')" title="체력 +40 회복">🧪 체력물약 (30G)</button>
+        <button class="forge-btn" onclick="upgradeWeapon()">🔨 무기 강화 (<span id="forge-cost-text">40</span>G)</button>
+        <button onclick="buyAndUseItem('potion')" title="체력 +45 회복">🧪 체력물약 (30G)</button>
         <button onclick="buyAndUseItem('double')" title="다음 공격 데미지 2배">📜 더블공격 (40G)</button>
-        <button onclick="openDexModal()">📖 단어 도감 (<span id="dex-count-btn">0</span>)</button>
+        <button onclick="openDexModal()">📖 도감 (<span id="dex-count-btn">0</span>)</button>
       </div>
 
       <!-- 영어 퀴즈 출제 영역 -->
@@ -130,8 +142,8 @@
 
       <!-- 스킬 조작 버튼 -->
       <div class="controls" id="controls">
-        <button onclick="openQuiz('fireball')">🔥 파이어볼 (뜻 / MP 20)</button>
-        <button onclick="openQuiz('thunder')">⚡ 썬더 (철자 / MP 30)</button>
+        <button onclick="openQuiz('fireball')">🔥 기본 공격 (뜻 / MP 20)</button>
+        <button onclick="openQuiz('thunder')">⚡ 필살기 (철자 / MP 30)</button>
         <button onclick="openQuiz('heal')">💚 힐링 (뜻 / MP 25)</button>
         <button onclick="openQuiz('meditate')">✨ 명상 (+40 MP)</button>
       </div>
@@ -139,7 +151,7 @@
       <!-- 전투 종료 후 오답 노트 및 재시작 -->
       <div id="result-panel" class="result-panel" style="display:none;">
         <div id="wrong-notes-box" class="wrong-notes-box"></div>
-        <button id="restart-btn" class="restart-btn" onclick="startGame()">🔄 같은 단원 다시 싸우기</button>
+        <button id="restart-btn" class="restart-btn" onclick="startGame()">🔄 다음 스테이지(다시 싸우기)</button>
       </div>
 
       <!-- 전투 로그 -->
