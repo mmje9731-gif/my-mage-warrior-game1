@@ -1,15 +1,51 @@
-<html>
+<!DOCTYPE html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Text Game</title>
+  <title>마법사 vs 전사 RPG</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="output">
-    
+  <div class="game-container">
+    <h1>⚔️ 마법사 vs 전사 🔮</h1>
+
+    <!-- 캐릭터 상태 창 -->
+    <div class="battle-arena">
+      <div class="character-card mage">
+        <div class="avatar">🧙‍♀️</div>
+        <h2>마법사 (Nuwa)</h2>
+        <div class="bar-label">HP: <span id="mage-hp-text">100</span>/100</div>
+        <div class="bar-bg"><div id="mage-hp-bar" class="bar hp"></div></div>
+        <div class="bar-label">MP: <span id="mage-mp-text">100</span>/100</div>
+        <div class="bar-bg"><div id="mage-mp-bar" class="bar mp"></div></div>
+      </div>
+
+      <div class="vs">VS</div>
+
+      <div class="character-card warrior">
+        <div class="avatar">🛡️</div>
+        <h2>전사 (Nezha)</h2>
+        <div class="bar-label">HP: <span id="warrior-hp-text">130</span>/130</div>
+        <div class="bar-bg"><div id="warrior-hp-bar" class="bar hp"></div></div>
+        <div class="bar-label">분노: <span id="warrior-rage-text">0</span>/100</div>
+        <div class="bar-bg"><div id="warrior-rage-bar" class="bar rage"></div></div>
+      </div>
+    </div>
+
+    <!-- 스킬 조작 버튼 -->
+    <div class="controls" id="controls">
+      <button onclick="playerAction('fireball')">🔥 파이어볼 (MP 20)</button>
+      <button onclick="playerAction('thunder')">⚡ 썬더 스트라이크 (MP 30)</button>
+      <button onclick="playerAction('heal')">💚 힐링 (MP 25)</button>
+      <button onclick="playerAction('meditate')">✨ 마나 회복 (+35 MP)</button>
+    </div>
+
+    <button id="restart-btn" class="restart-btn" onclick="resetGame()" style="display:none;">🔄 다시 싸우기</button>
+
+    <!-- 전투 로그 -->
+    <div id="battle-log" class="battle-log"></div>
   </div>
+
   <script src="game.js"></script>
 </body>
 </html>
