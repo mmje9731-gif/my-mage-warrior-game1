@@ -2,12 +2,12 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>2022 개정 초등 영어 배틀 RPG</title>
+  <title>초등영어 RPG</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="game-container">
-    <h1>📚 2022 개정 초등 영어 배틀 RPG ⚔️</h1>
+    <h1>⚔️ 초등영어 RPG 📚</h1>
     <p class="subtitle">학년·교과서·단원을 선택하고 영어 문제를 맞혀 적을 물리치세요!</p>
 
     <!-- 학습 범위 선택 패널 -->
@@ -36,15 +36,16 @@
       <button class="start-btn" onclick="startGame()">⚔️ 선택한 범위로 배틀 시작!</button>
     </div>
 
-    <!-- 실제 게임 전투 화면 (시작 후 표시) -->
+    <!-- 실제 게임 전투 화면 -->
     <div id="game-screen" style="display:none;">
       <div class="current-badge-bar">
-        <span id="current-scope-badge" class="scope-badge">3학년 | YBM(최) | 3-1-L1</span>
+        <span id="current-scope-badge" class="scope-badge">3학년 | YBM(최) | Lesson 1</span>
+        <span id="combo-badge" class="combo-badge" style="display:none;">🔥 0 COMBO!</span>
         <button class="change-scope-btn" onclick="backToMenu()">🔄 학년/단원 변경</button>
       </div>
 
       <div class="battle-arena">
-        <div class="character-card mage">
+        <div class="character-card mage" id="mage-card">
           <div class="avatar">🧙‍♀️</div>
           <h2>영어 마법사</h2>
           <div class="bar-label">HP: <span id="mage-hp-text">100</span>/100</div>
@@ -55,7 +56,7 @@
 
         <div class="vs">VS</div>
 
-        <div class="character-card warrior">
+        <div class="character-card warrior" id="warrior-card">
           <div class="avatar">🛡️</div>
           <h2>어둠의 전사</h2>
           <div class="bar-label">HP: <span id="warrior-hp-text">130</span>/130</div>
@@ -67,21 +68,36 @@
 
       <!-- 영어 퀴즈 출제 영역 -->
       <div id="quiz-box" class="quiz-box" style="display:none;">
-        <div class="quiz-badge" id="quiz-skill-name">🔥 파이어볼 주문 영창</div>
+        <div class="quiz-header">
+          <span class="quiz-badge" id="quiz-skill-name">🔥 파이어볼 영창 퀴즈</span>
+          <button class="tts-btn" id="tts-btn" onclick="speakCurrentWord()">🔊 발음 듣기</button>
+        </div>
         <div class="quiz-pos" id="quiz-pos">[명사]</div>
         <h3 id="quiz-question">문제 텍스트</h3>
+        
+        <!-- 객관식 보기 -->
         <div id="quiz-options" class="quiz-options"></div>
+
+        <!-- 주관식 철자 입력 (썬더 스트라이크 전용) -->
+        <div id="spelling-box" class="spelling-box" style="display:none;">
+          <input type="text" id="spelling-input" placeholder="영어 철자를 입력하세요" autocomplete="off" onkeydown="if(event.key==='Enter') submitSpelling()">
+          <button onclick="submitSpelling()">⚡ 주문 발사!</button>
+        </div>
       </div>
 
       <!-- 스킬 조작 버튼 -->
       <div class="controls" id="controls">
-        <button onclick="openQuiz('fireball')">🔥 파이어볼 (MP 20)</button>
-        <button onclick="openQuiz('thunder')">⚡ 썬더 스트라이크 (MP 30)</button>
-        <button onclick="openQuiz('heal')">💚 힐링 (MP 25)</button>
+        <button onclick="openQuiz('fireball')">🔥 파이어볼 (뜻 맞히기 / MP 20)</button>
+        <button onclick="openQuiz('thunder')">⚡ 썬더 스트라이크 (철자 쓰기 / MP 30)</button>
+        <button onclick="openQuiz('heal')">💚 힐링 (뜻 맞히기 / MP 25)</button>
         <button onclick="openQuiz('meditate')">✨ 마나 회복 (+40 MP)</button>
       </div>
 
-      <button id="restart-btn" class="restart-btn" onclick="startGame()" style="display:none;">🔄 같은 단원 다시 싸우기</button>
+      <!-- 전투 종료 후 오답 노트 및 재시작 -->
+      <div id="result-panel" class="result-panel" style="display:none;">
+        <div id="wrong-notes-box" class="wrong-notes-box"></div>
+        <button id="restart-btn" class="restart-btn" onclick="startGame()">🔄 같은 단원 다시 싸우기</button>
+      </div>
 
       <!-- 전투 로그 -->
       <div id="battle-log" class="battle-log"></div>
