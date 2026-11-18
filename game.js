@@ -218,4 +218,282 @@ const lessonsList = [
   { id: "L4", name: "Lesson 4 (1학기 4단원)" },
   { id: "L5", name: "Lesson 5 (1학기 5단원)" },
   { id: "L6", name: "Lesson 6 (1학기 6단원)" },
-  { id: "
+  { id: "L7", name: "Lesson 7 (2학기 7단원)" },
+  { id: "L8", name: "Lesson 8 (2학기 8단원)" },
+  { id: "L9", name: "Lesson 9 (2학기 9단원)" },
+  { id: "L10", name: "Lesson 10 (2학기 10단원)" },
+  { id: "L11", name: "Lesson 11 (2학기 11단원)" },
+  { id: "L12", name: "Lesson 12 (2학기 12단원)" }
+];
+
+// ==========================================
+// ⚔️ 게임 상태 관리 및 메인 로직
+// ==========================================
+const gameState = {
+  job: "warrior",
+  grade: "3학년",
+  publisher: "YBM(최)",
+  lesson: "ALL",
+  level: 1,
+  exp: 0,
+  hp: 100,
+  maxHp: 100,
+  atk: 25,
+  stage: 0,
+  monsterHp: 110,
+  monsterMaxHp: 110,
+  monsterAtk: 11,
+  currentPool: [],
+  currentWord: null
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const selects = document.querySelectorAll("select");
+  const gradeSelect = document.getElementById("grade-select") || selects[0];
+  const pubSelect = document.getElementById("publisher-select") || selects[1];
+  const lessonSelect = document.getElementById("lesson-select") || selects[2];
+
+  // 1. 직업 선택 카드 클릭 이벤트 연결
+  const jobCards = document.querySelectorAll(".job-card, [data-job]");
+  jobCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      jobCards.forEach((c) => c.classList.remove("selected", "active"));
+      card.classList.add("selected", "active");
+
+      const jobAttr = card.getAttribute("data-job") || card.textContent;
+      if (jobAttr.includes("archer") || jobAttr.includes("궁수")) {
+        gameState.job = "archer";
+        gameState.maxHp = 100;
+        gameState.atk = 30;
+      } else if (jobAttr.includes("mage") || jobAttr.includes("마법사")) {
+        gameState.job = "mage";
+        gameState.maxHp = 85;
+        gameState.atk = 38;
+      } else {
+        gameState.job = "warrior";
+        gameState.maxHp = 130;
+        gameState.atk = 24;
+      }
+      gameState.hp = gameState.maxHp;
+    });
+  });
+
+  // 2. 학년 -> 출판사 & 단원 드롭다운 연동
+  function getGradeKey() {
+    if (!gradeSelect) return "3학년";
+    const val = gradeSelect.value;
+    return Object.keys(publishersByGrade).find((k) => val.includes(k)) || "3학년";
+  }
+
+  function refreshPublishersAndLessons() {
+    const gradeKey = getGradeKey();
+    gameState.grade = gradeKey;
+
+    if (pubSelect) {
+      const pubs = publishersByGrade[gradeKey] || [];
+      pubSelect.innerHTML = pubs.map((p) => `<option value="${p}">${p}</option>`).join("");
+      gameState.publisher = pubSelect.value;
+    }
+
+    if (lessonSelect && lessonSelect.options.length === 0) {
+      lessonSelect.innerHTML = lessonsList.map((l) => `<option value="${l.id}">${l.name}</option>`).join("");
+    }
+
+    updateFilteredWords();
+  }
+
+  // 3. 선택된 학년/단원에 따른 출제 가능 어휘 계산 및 화면 표시
+  function updateFilteredWords() {
+    const gradeKey = getGradeKey();
+    const lessonId = lessonSelect ? lessonSelect.value || "ALL" : "ALL";
+    gameState.lesson = lessonId;
+
+    const allWords = vocabDict[gradeKey] || [];
+    gameState.currentPool =
+      lessonId === "ALL"
+        ? [...allWords]
+        : allWords.filter((item) => item.l.includes(lessonId));
+
+    // 출제 가능 어휘 숫자 업데이트 (ID가 있거나 텍스트에 '출제 가능 어휘'가 포함된 요소 자동 탐색)
+    const countEl = document.getElementById("vocab-count");
+    if (countEl) {
+      countEl.textContent = gameState.currentPool.length;
+    } else {
+      document.querySelectorAll("p, div, span").forEach((el) => {
+        if (el.children.length === 0 && el.textContent.includes("출제 가능 어휘:")) {
+          el.textContent = `출제 가능 어휘: ${gameState.currentPool.length}개`;
+        }
+      });
+    }
+  }
+
+  if (gradeSelect) gradeSelect.addEventListener("change", refreshPublishersAndLessons);
+  if (pubSelect) pubSelect.addEventListener("change", () => (gameState.publisher = pubSelect.value));
+  if (lessonSelect) lessonSelect.addEventListener("change", updateFilteredWords);
+
+  // 초기 드롭다운 즉시 세팅
+  refreshPublishersAndLessons();
+
+  // 4. [모험 출발하기!] 버튼 클릭 이벤트 연결
+  const startBtn =
+    document.getElementById("start-btn") ||
+    Array.from(document.querySelectorAll("button")).find((b) => b.textContent.includes("모험 출발"));
+
+  if (startBtn) {
+    startBtn.addEventListener("click", () => {
+      if (gameState.currentPool.length === 0) {
+        alert("선택한 단원에 출제할 어휘가 없습니다. 다른 단원을 선택해주세요!");
+        return;
+      }
+      startBattleScreen();
+    });
+  }
+});
+
+// ==========================================
+// 🏟️ 전투 화면 렌더링 및 퀴즈 진행
+// ==========================================
+function startBattleScreen() {
+  const setupScreen = document.getElementById("setup-screen") || document.querySelector(".setup-container");
+  let battleScreen = document.getElementById("battle-screen");
+
+  if (setupScreen) setupScreen.style.display = "none";
+
+  // index.html에 battle-screen이 미리 없다면 동적으로 생성
+  if (!battleScreen) {
+    battleScreen = document.createElement("div");
+    battleScreen.id = "battle-screen";
+    battleScreen.style.cssText =
+      "max-width:700px; margin:20px auto; padding:24px; background:#16213e; color:#fff; border-radius:16px; text-align:center; font-family:sans-serif; box-shadow:0 8px 24px rgba(0,0,0,0.4);";
+    document.body.appendChild(battleScreen);
+  }
+  battleScreen.style.display = "block";
+
+  loadStage(0);
+}
+
+function loadStage(stageIndex) {
+  gameState.stage = stageIndex % monsterRoster.length;
+  const mon = monsterRoster[gameState.stage];
+  const scale = 1 + Math.floor(stageIndex / monsterRoster.length) * 0.3;
+
+  gameState.monsterMaxHp = Math.round(mon.baseHp * scale);
+  gameState.monsterHp = gameState.monsterMaxHp;
+  gameState.monsterAtk = Math.round(mon.baseAtk * scale);
+
+  nextQuestion();
+}
+
+function nextQuestion() {
+  const pool = gameState.currentPool;
+  const target = pool[Math.floor(Math.random() * pool.length)];
+  gameState.currentWord = target;
+
+  // 오답 보기 3개 추출
+  const allGradeWords = vocabDict[gameState.grade];
+  const distractors = allGradeWords
+    .filter((item) => item.w !== target.w)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
+
+  const choices = [target, ...distractors].sort(() => Math.random() - 0.5);
+  renderBattleUI(choices);
+}
+
+function renderBattleUI(choices) {
+  const battleScreen = document.getElementById("battle-screen");
+  const mon = monsterRoster[gameState.stage];
+  const tier = Math.min(4, Math.floor((gameState.level - 1) / 2) + 1);
+
+  battleScreen.innerHTML = `
+    <div style="display:flex; justify-content:space-between; margin-bottom:16px; font-size:14px; color:#ffd54f;">
+      <span>📚 ${gameState.grade} · ${gameState.publisher} (${gameState.lesson})</span>
+      <span>⭐ Lv.${gameState.level} (EXP: ${gameState.exp}/100)</span>
+    </div>
+
+    <div style="display:flex; justify-content:space-around; align-items:center; background:#0f3460; padding:20px; border-radius:12px; margin-bottom:20px;">
+      <div style="width:42%;">
+        <div style="width:110px; height:110px; margin:0 auto;">${getHeroSvg(gameState.job, tier)}</div>
+        <div style="font-weight:bold; margin-top:8px;">용사 (Lv.${gameState.level})</div>
+        <div style="background:#333; height:12px; border-radius:6px; overflow:hidden; margin-top:6px;">
+          <div style="width:${Math.max(0, (gameState.hp / gameState.maxHp) * 100)}%; background:#4ecca3; height:100%;"></div>
+        </div>
+        <div style="font-size:12px; margin-top:4px;">HP: ${gameState.hp} / ${gameState.maxHp}</div>
+      </div>
+
+      <div style="font-size:24px; font-weight:bold; color:#e94560;">VS</div>
+
+      <div style="width:42%;">
+        <div style="width:110px; height:110px; margin:0 auto;">${monsterSvg[mon.art]}</div>
+        <div style="font-weight:bold; margin-top:8px; color:#ff8a80;">${mon.name}</div>
+        <div style="background:#333; height:12px; border-radius:6px; overflow:hidden; margin-top:6px;">
+          <div style="width:${Math.max(0, (gameState.monsterHp / gameState.monsterMaxHp) * 100)}%; background:#e94560; height:100%;"></div>
+        </div>
+        <div style="font-size:12px; margin-top:4px;">HP: ${gameState.monsterHp} / ${gameState.monsterMaxHp}</div>
+      </div>
+    </div>
+
+    <div id="battle-log" style="min-height:24px; color:#ffd54f; font-size:14px; margin-bottom:12px;">
+      단어의 뜻을 맞춰 몬스터를 공격하세요!
+    </div>
+
+    <div style="background:#1a1a2e; padding:20px; border-radius:12px; margin-bottom:16px;">
+      <div style="font-size:13px; color:#a2a8d3;">[${gameState.currentWord.pos}]</div>
+      <div style="font-size:32px; font-weight:bold; letter-spacing:1px; margin:8px 0;">${gameState.currentWord.w}</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      ${choices
+        .map(
+          (c) => `
+        <button class="quiz-choice-btn" data-word="${c.w}" style="padding:14px; font-size:16px; font-weight:bold; border:none; border-radius:10px; background:#e94560; color:#fff; cursor:pointer;">
+          ${c.m}
+        </button>
+      `
+        )
+        .join("")}
+    </div>
+  `;
+
+  document.querySelectorAll(".quiz-choice-btn").forEach((btn) => {
+    btn.addEventListener("click", () => handleAnswer(btn.getAttribute("data-word")));
+  });
+}
+
+function handleAnswer(selectedWord) {
+  const logEl = document.getElementById("battle-log");
+  const isCorrect = selectedWord === gameState.currentWord.w;
+
+  if (isCorrect) {
+    const dmg = gameState.atk + Math.floor(Math.random() * 8);
+    gameState.monsterHp = Math.max(0, gameState.monsterHp - dmg);
+    logEl.textContent = `⚔️ 정답! ${monsterRoster[gameState.stage].name}에게 ${dmg}의 데미지를 입혔습니다!`;
+
+    if (gameState.monsterHp === 0) {
+      gameState.exp += 50;
+      if (gameState.exp >= 100) {
+        gameState.level += 1;
+        gameState.exp -= 100;
+        gameState.maxHp += 20;
+        gameState.hp = gameState.maxHp;
+        gameState.atk += 5;
+        alert(`🎉 레벨 업! Lv.${gameState.level} 달성! 능력치와 외형이 진화합니다!`);
+      } else {
+        alert(`🏆 ${monsterRoster[gameState.stage].name} 처치 성공! 다음 몬스터가 등장합니다.`);
+      }
+      loadStage(gameState.stage + 1);
+      return;
+    }
+  } else {
+    gameState.hp = Math.max(0, gameState.hp - gameState.monsterAtk);
+    logEl.textContent = `💥 오답! 정답은 '${gameState.currentWord.m}'입니다. (-${gameState.monsterAtk} HP)`;
+
+    if (gameState.hp === 0) {
+      alert("💀 영웅이 쓰러졌습니다... 처음 화면으로 돌아갑니다.");
+      location.reload();
+      return;
+    }
+  }
+
+  setTimeout(nextQuestion, 800);
+}
