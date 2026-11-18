@@ -1,5 +1,5 @@
 // ==========================================
-// 🔊 Web Audio API 효과음 생성기 (외부 파일 불필요)
+// 🔊 Web Audio API 효과음 생성기
 // ==========================================
 const audioCtx = typeof window !== "undefined" && (window.AudioContext || window.webkitAudioContext)
   ? new (window.AudioContext || window.webkitAudioContext)()
@@ -25,12 +25,12 @@ function playSfx(type) {
     osc.stop(now + 0.15);
   } else if (type === "crit") {
     osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(520, now);
-    osc.frequency.exponentialRampToValueAtTime(110, now + 0.28);
+    osc.frequency.setValueAtTime(540, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
     gain.gain.setValueAtTime(0.32, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
     osc.start(now);
-    osc.stop(now + 0.28);
+    osc.stop(now + 0.3);
   } else if (type === "hurt") {
     osc.type = "sawtooth";
     osc.frequency.setValueAtTime(150, now);
@@ -90,11 +90,56 @@ function triggerHitEffect(targetBoxId, text, color) {
   setTimeout(() => dmgEl.remove(), 780);
 }
 
+// 🎨 스테이지 테마 배경 & 위기 비네팅 연출
+function applyStageAtmosphere(monArt, isBoss) {
+  const themes = {
+    slime: "radial-gradient(circle at top, #134e4a 0%, #0f172a 75%)",
+    bat: "radial-gradient(circle at top, #3b0764 0%, #0f172a 75%)",
+    orc: "radial-gradient(circle at top, #14532d 0%, #0f172a 75%)",
+    ghost: "radial-gradient(circle at top, #164e63 0%, #090d16 75%)",
+    golem: "radial-gradient(circle at top, #1e3a8a 0%, #090d16 75%)",
+    darkmage: "radial-gradient(circle at top, #4c1d95 0%, #090d16 75%)",
+    werewolf: "radial-gradient(circle at top, #78350f 0%, #090d16 75%)",
+    dragon: "radial-gradient(circle at top, #7f1d1d 0%, #090d16 75%)"
+  };
+  document.body.style.transition = "background 0.8s ease";
+  document.body.style.background = themes[monArt] || themes.slime;
+
+  // 보스 경고 배너 표시
+  let banner = document.getElementById("boss-warning-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "boss-warning-banner";
+    const gameScreen = document.getElementById("game-screen");
+    if (gameScreen) gameScreen.prepend(banner);
+  }
+  if (isBoss) {
+    banner.style.cssText = `
+      background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.85), transparent);
+      color: #fef08a; font-weight: 900; text-align: center; padding: 6px;
+      margin-bottom: 8px; letter-spacing: 1.5px; font-size: 13px; border-radius: 8px;
+      text-shadow: 0 1px 4px #000;
+    `;
+    banner.textContent = "⚠️ BOSS BATTLE · 강력한 보스 몬스터 출현!";
+    banner.style.display = "block";
+  } else {
+    banner.style.display = "none";
+  }
+}
+
+function updateDangerVignette() {
+  const isDanger = state.hp > 0 && state.hp <= state.maxHp * 0.25;
+  document.body.style.boxShadow = isDanger
+    ? "inset 0 0 55px rgba(239, 68, 68, 0.75)"
+    : "none";
+}
+
 // ==========================================
 // 🎨 영웅 & 몬스터 고화질 일러스트 렌더러
 // ==========================================
 function getHeroSvg(job, avatarTier) {
   const wLv = typeof state !== "undefined" ? state.weaponLv : 0;
+  const isFever = typeof state !== "undefined" && state.combo >= 3;
 
   const heroImages = {
     archer: { base: "archer.png", awakened: "archer_awakened.png" },
@@ -114,7 +159,9 @@ function getHeroSvg(job, avatarTier) {
     frameStyle = "border: 3px solid #00e5ff; box-shadow: 0 0 26px rgba(0, 229, 255, 1), inset 0 0 12px rgba(255, 215, 0, 0.6);";
   }
 
-  if (wLv >= 5) {
+  if (isFever) {
+    frameStyle = "border: 3px solid #fde047; box-shadow: 0 0 28px #f59e0b, 0 0 12px #fef08a;";
+  } else if (wLv >= 5) {
     frameStyle += " outline: 2px solid #ff5252; outline-offset: 2px;";
   }
 
@@ -126,7 +173,7 @@ function getHeroSvg(job, avatarTier) {
 
   const weaponBadge = wLv > 0
     ? `<span style="position:absolute; bottom:5px; right:5px; background:rgba(15,23,42,0.85); color:${wLv >= 5 ? "#ff8a80" : "#ffd54f"}; border:1px solid ${wLv >= 5 ? "#ff5252" : "#ffd54f"}; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:6px;">
-        ⚔️ +${wLv}
+        ⚔️ +${wLv}${wLv >= 5 ? " 🔥" : wLv >= 3 ? " ✨" : ""}
        </span>`
     : "";
 
@@ -197,121 +244,135 @@ const relicPool = [
   { id: "spell_master", icon: "📖", name: "대현자의 마도서", desc: "철자 필살기(⚡) 데미지 +35% 추가 상승" }
 ];
 
-// 📚 2022 개정 초등 영어 어휘 사전
+// 🏅 칭호(업적) 정의
+const titleAchievements = [
+  { id: "combo10", name: "🔥 연승의 달인", check: s => s.maxCombo >= 10 },
+  { id: "dragon_slayer", name: "🐉 드래곤 슬레이어", check: s => s.dragonKilled },
+  { id: "scholar", name: "📖 걸어다니는 사전", check: s => s.dex.size >= 25 },
+  { id: "awakened", name: "👑 각성한 전설", check: s => s.avatarTier >= 4 },
+  { id: "rookie", name: "🌱 견습 모험가", check: () => true }
+];
+
+function getActiveTitle() {
+  const found = titleAchievements.find(t => t.check(state));
+  return found ? found.name : "🌱 견습 모험가";
+}
+
+// 📚 2022 개정 초등 영어 어휘 사전 (예문 포함)
 const vocabDict = {
   "3학년": [
-    { w: "apple", m: "사과", pos: "명사", l: ["L1", "L2", "L3"] },
-    { w: "banana", m: "바나나", pos: "명사", l: ["L2", "L3", "L4"] },
-    { w: "book", m: "책", pos: "명사", l: ["L1", "L2", "L5"] },
-    { w: "pencil", m: "연필", pos: "명사", l: ["L2", "L3", "L5"] },
-    { w: "bag", m: "가방", pos: "명사", l: ["L2", "L4"] },
-    { w: "dog", m: "개", pos: "명사", l: ["L3", "L4", "L6"] },
-    { w: "cat", m: "고양이", pos: "명사", l: ["L3", "L4", "L6"] },
-    { w: "bird", m: "새", pos: "명사", l: ["L4", "L6"] },
-    { w: "fish", m: "물고기", pos: "명사", l: ["L4", "L6"] },
-    { w: "red", m: "빨간색", pos: "형용사/명사", l: ["L5", "L6", "L7"] },
-    { w: "blue", m: "파란색", pos: "형용사/명사", l: ["L5", "L6", "L7"] },
-    { w: "yellow", m: "노란색", pos: "형용사/명사", l: ["L5", "L6", "L7"] },
-    { w: "green", m: "초록색", pos: "형용사/명사", l: ["L5", "L7"] },
-    { w: "happy", m: "행복한", pos: "형용사", l: ["L1", "L7", "L8"] },
-    { w: "sad", m: "슬픈", pos: "형용사", l: ["L7", "L8"] },
-    { w: "big", m: "큰", pos: "형용사", l: ["L6", "L8", "L9"] },
-    { w: "small", m: "작은", pos: "형용사", l: ["L6", "L8", "L9"] },
-    { w: "run", m: "달리다", pos: "동사", l: ["L8", "L9", "L10"] },
-    { w: "jump", m: "뛰다, 점프하다", pos: "동사", l: ["L8", "L9", "L10"] },
-    { w: "swim", m: "수영하다", pos: "동사", l: ["L9", "L10", "L11"] },
-    { w: "dance", m: "춤추다", pos: "동사", l: ["L9", "L10", "L11"] },
-    { w: "mother", m: "어머니", pos: "명사", l: ["L10", "L11", "L12"] },
-    { w: "father", m: "아버지", pos: "명사", l: ["L10", "L11", "L12"] },
-    { w: "sister", m: "여자 형제", pos: "명사", l: ["L11", "L12"] },
-    { w: "brother", m: "남자 형제", pos: "명사", l: ["L11", "L12"] },
-    { w: "water", m: "물", pos: "명사", l: ["L3", "L7", "L11"] },
-    { w: "milk", m: "우유", pos: "명사", l: ["L3", "L7", "L12"] },
-    { w: "bread", m: "빵", pos: "명사", l: ["L4", "L8", "L12"] },
-    { w: "sun", m: "태양, 해", pos: "명사", l: ["L5", "L9", "L11"] },
-    { w: "star", m: "별", pos: "명사", l: ["L6", "L10", "L12"] }
+    { w: "apple", m: "사과", pos: "명사", ex: "I eat a sweet _____ every day.", l: ["L1", "L2", "L3"] },
+    { w: "banana", m: "바나나", pos: "명사", ex: "A monkey likes a yellow _____.", l: ["L2", "L3", "L4"] },
+    { w: "book", m: "책", pos: "명사", ex: "Open your English _____, please.", l: ["L1", "L2", "L5"] },
+    { w: "pencil", m: "연필", pos: "명사", ex: "I write my name with a _____.", l: ["L2", "L3", "L5"] },
+    { w: "bag", m: "가방", pos: "명사", ex: "Put your books in your _____.", l: ["L2", "L4"] },
+    { w: "dog", m: "개", pos: "명사", ex: "The cute _____ barks loudly.", l: ["L3", "L4", "L6"] },
+    { w: "cat", m: "고양이", pos: "명사", ex: "The sleepy _____ likes milk.", l: ["L3", "L4", "L6"] },
+    { w: "bird", m: "새", pos: "명사", ex: "A small _____ is singing in the tree.", l: ["L4", "L6"] },
+    { w: "fish", m: "물고기", pos: "명사", ex: "A colorful _____ swims in the water.", l: ["L4", "L6"] },
+    { w: "red", m: "빨간색", pos: "형용사/명사", ex: "Strawberries and apples are _____.", l: ["L5", "L6", "L7"] },
+    { w: "blue", m: "파란색", pos: "형용사/명사", ex: "Look at the clear _____ sky!", l: ["L5", "L6", "L7"] },
+    { w: "yellow", m: "노란색", pos: "형용사/명사", ex: "The bright sun is _____.", l: ["L5", "L6", "L7"] },
+    { w: "green", m: "초록색", pos: "형용사/명사", ex: "The leaves on the tree are _____.", l: ["L5", "L7"] },
+    { w: "happy", m: "행복한", pos: "형용사", ex: "I am so _____ on my birthday!", l: ["L1", "L7", "L8"] },
+    { w: "sad", m: "슬픈", pos: "형용사", ex: "Don't cry. Why are you _____?", l: ["L7", "L8"] },
+    { w: "big", m: "큰", pos: "형용사", ex: "An elephant is a very _____ animal.", l: ["L6", "L8", "L9"] },
+    { w: "small", m: "작은", pos: "형용사", ex: "An ant is very _____.", l: ["L6", "L8", "L9"] },
+    { w: "run", m: "달리다", pos: "동사", ex: "Cheetahs can _____ very fast.", l: ["L8", "L9", "L10"] },
+    { w: "jump", m: "뛰다, 점프하다", pos: "동사", ex: "Rabbits can _____ very high.", l: ["L8", "L9", "L10"] },
+    { w: "swim", m: "수영하다", pos: "동사", ex: "Let's _____ in the pool this summer.", l: ["L9", "L10", "L11"] },
+    { w: "dance", m: "춤추다", pos: "동사", ex: "We sing and _____ to the music.", l: ["L9", "L10", "L11"] },
+    { w: "mother", m: "어머니", pos: "명사", ex: "My _____ cooks delicious food.", l: ["L10", "L11", "L12"] },
+    { w: "father", m: "아버지", pos: "명사", ex: "My _____ drives me to school.", l: ["L10", "L11", "L12"] },
+    { w: "sister", m: "여자 형제", pos: "명사", ex: "My little _____ is five years old.", l: ["L11", "L12"] },
+    { w: "brother", m: "남자 형제", pos: "명사", ex: "I play soccer with my _____.", l: ["L11", "L12"] },
+    { w: "water", m: "물", pos: "명사", ex: "Drink plenty of clean _____.", l: ["L3", "L7", "L11"] },
+    { w: "milk", m: "우유", pos: "명사", ex: "I drink a glass of _____ every morning.", l: ["L3", "L7", "L12"] },
+    { w: "bread", m: "빵", pos: "명사", ex: "I eat toast and _____ for breakfast.", l: ["L4", "L8", "L12"] },
+    { w: "sun", m: "태양, 해", pos: "명사", ex: "The _____ rises in the morning.", l: ["L5", "L9", "L11"] },
+    { w: "star", m: "별", pos: "명사", ex: "Twinkle, twinkle, little _____.", l: ["L6", "L10", "L12"] }
   ],
   "4학년": [
-    { w: "morning", m: "아침", pos: "명사", l: ["L1", "L2", "L3"] },
-    { w: "afternoon", m: "오후", pos: "명사", l: ["L1", "L2", "L3"] },
-    { w: "evening", m: "저녁", pos: "명사", l: ["L1", "L2"] },
-    { w: "teacher", m: "선생님", pos: "명사", l: ["L1", "L3", "L4"] },
-    { w: "student", m: "학생", pos: "명사", l: ["L1", "L3", "L4"] },
-    { w: "friend", m: "친구", pos: "명사", l: ["L1", "L2", "L5"] },
-    { w: "sunny", m: "화창한, 맑은", pos: "형용사", l: ["L3", "L4", "L5"] },
-    { w: "rainy", m: "비가 오는", pos: "형용사", l: ["L3", "L4", "L5"] },
-    { w: "cloudy", m: "흐린", pos: "형용사", l: ["L3", "L4", "L5"] },
-    { w: "windy", m: "바람이 부는", pos: "형용사", l: ["L4", "L5"] },
-    { w: "breakfast", m: "아침 식사", pos: "명사", l: ["L5", "L6", "L7"] },
-    { w: "lunch", m: "점심 식사", pos: "명사", l: ["L5", "L6", "L7"] },
-    { w: "dinner", m: "저녁 식사", pos: "명사", l: ["L5", "L6", "L7"] },
-    { w: "school", m: "학교", pos: "명사", l: ["L2", "L6", "L8"] },
-    { w: "home", m: "집", pos: "명사/부사", l: ["L2", "L6", "L8"] },
-    { w: "soccer", m: "축구", pos: "명사", l: ["L7", "L8", "L9"] },
-    { w: "baseball", m: "야구", pos: "명사", l: ["L7", "L8", "L9"] },
-    { w: "basketball", m: "농구", pos: "명사", l: ["L7", "L8", "L9"] },
-    { w: "hungry", m: "배고픈", pos: "형용사", l: ["L8", "L9", "L10"] },
-    { w: "thirsty", m: "목마른", pos: "형용사", l: ["L8", "L9", "L10"] },
-    { w: "tired", m: "피곤한", pos: "형용사", l: ["L9", "L10", "L11"] },
-    { w: "watch", m: "손목시계 / 보다", pos: "명사/동사", l: ["L10", "L11", "L12"] },
-    { w: "umbrella", m: "우산", pos: "명사", l: ["L10", "L11", "L12"] },
-    { w: "gloves", m: "장갑", pos: "명사", l: ["L11", "L12"] },
-    { w: "clean", m: "깨끗한 / 청소하다", pos: "형용사/동사", l: ["L11", "L12"] },
-    { w: "help", m: "돕다", pos: "동사", l: ["L9", "L11", "L12"] }
+    { w: "morning", m: "아침", pos: "명사", ex: "Good _____! Did you sleep well?", l: ["L1", "L2", "L3"] },
+    { w: "afternoon", m: "오후", pos: "명사", ex: "We play soccer in the _____.", l: ["L1", "L2", "L3"] },
+    { w: "evening", m: "저녁", pos: "명사", ex: "My family eats dinner in the _____.", l: ["L1", "L2"] },
+    { w: "teacher", m: "선생님", pos: "명사", ex: "Our English _____ is very kind.", l: ["L1", "L3", "L4"] },
+    { w: "student", m: "학생", pos: "명사", ex: "I am an elementary school _____.", l: ["L1", "L3", "L4"] },
+    { w: "friend", m: "친구", pos: "명사", ex: "She is my best _____ at school.", l: ["L1", "L2", "L5"] },
+    { w: "sunny", m: "화창한, 맑은", pos: "형용사", ex: "It is bright and _____ today.", l: ["L3", "L4", "L5"] },
+    { w: "rainy", m: "비가 오는", pos: "형용사", ex: "Take your umbrella on a _____ day.", l: ["L3", "L4", "L5"] },
+    { w: "cloudy", m: "흐린", pos: "형용사", ex: "There are many clouds. It is _____.", l: ["L3", "L4", "L5"] },
+    { w: "windy", m: "바람이 부는", pos: "형용사", ex: "Let's fly a kite on a _____ day.", l: ["L4", "L5"] },
+    { w: "breakfast", m: "아침 식사", pos: "명사", ex: "I eat eggs and bread for _____.", l: ["L5", "L6", "L7"] },
+    { w: "lunch", m: "점심 식사", pos: "명사", ex: "It's 12 o'clock. Time for _____!", l: ["L5", "L6", "L7"] },
+    { w: "dinner", m: "저녁 식사", pos: "명사", ex: "We have bulgogi for _____ tonight.", l: ["L5", "L6", "L7"] },
+    { w: "school", m: "학교", pos: "명사", ex: "I study and meet friends at _____.", l: ["L2", "L6", "L8"] },
+    { w: "home", m: "집", pos: "명사/부사", ex: "School is over. Let's go _____.", l: ["L2", "L6", "L8"] },
+    { w: "soccer", m: "축구", pos: "명사", ex: "Kick the ball! I love playing _____.", l: ["L7", "L8", "L9"] },
+    { w: "baseball", m: "야구", pos: "명사", ex: "Hit the ball with a _____ bat.", l: ["L7", "L8", "L9"] },
+    { w: "basketball", m: "농구", pos: "명사", ex: "Shoot the ball into the _____ hoop.", l: ["L7", "L8", "L9"] },
+    { w: "hungry", m: "배고픈", pos: "형용사", ex: "My stomach growls. I am _____.", l: ["L8", "L9", "L10"] },
+    { w: "thirsty", m: "목마른", pos: "형용사", ex: "I want some cold water. I am _____.", l: ["L8", "L9", "L10"] },
+    { w: "tired", m: "피곤한", pos: "형용사", ex: "Go to bed early when you are _____.", l: ["L9", "L10", "L11"] },
+    { w: "watch", m: "손목시계 / 보다", pos: "명사/동사", ex: "What time is it? Look at your _____.", l: ["L10", "L11", "L12"] },
+    { w: "umbrella", m: "우산", pos: "명사", ex: "It's raining! Open your _____.", l: ["L10", "L11", "L12"] },
+    { w: "gloves", m: "장갑", pos: "명사", ex: "Wear warm _____ on your hands.", l: ["L11", "L12"] },
+    { w: "clean", m: "깨끗한 / 청소하다", pos: "형용사/동사", ex: "Let's _____ our classroom together.", l: ["L11", "L12"] },
+    { w: "help", m: "돕다", pos: "동사", ex: "Can I _____ you carry that box?", l: ["L9", "L11", "L12"] }
   ],
   "5학년": [
-    { w: "country", m: "나라, 국가", pos: "명사", l: ["L1", "L2", "L3"] },
-    { w: "favorite", m: "가장 좋아하는", pos: "형용사", l: ["L2", "L3", "L4"] },
-    { w: "subject", m: "과목, 주제", pos: "명사", l: ["L2", "L3", "L4"] },
-    { w: "science", m: "과학", pos: "명사", l: ["L2", "L3", "L4"] },
-    { w: "math", m: "수학", pos: "명사", l: ["L2", "L3", "L4"] },
-    { w: "music", m: "음악", pos: "명사", l: ["L2", "L3", "L5"] },
-    { w: "museum", m: "박물관", pos: "명사", l: ["L4", "L5", "L6"] },
-    { w: "library", m: "도서관", pos: "명사", l: ["L4", "L5", "L6"] },
-    { w: "hospital", m: "병원", pos: "명사", l: ["L4", "L5", "L6"] },
-    { w: "straight", m: "똑바로, 곧장", pos: "부사/형용사", l: ["L5", "L6", "L7"] },
-    { w: "between", m: "~ 사이에", pos: "전치사", l: ["L5", "L6", "L7"] },
-    { w: "behind", m: "~ 뒤에", pos: "전치사", l: ["L5", "L6", "L7"] },
-    { w: "season", m: "계절", pos: "명사", l: ["L7", "L8", "L9"] },
-    { w: "spring", m: "봄", pos: "명사", l: ["L7", "L8", "L9"] },
-    { w: "summer", m: "여름", pos: "명사", l: ["L7", "L8", "L9"] },
-    { w: "autumn", m: "가을", pos: "명사", l: ["L7", "L8", "L9"] },
-    { w: "winter", m: "겨울", pos: "명사", l: ["L7", "L8", "L9"] },
-    { w: "vacation", m: "방학, 휴가", pos: "명사", l: ["L8", "L9", "L10"] },
-    { w: "visit", m: "방문하다", pos: "동사", l: ["L8", "L9", "L10"] },
-    { w: "travel", m: "여행하다", pos: "동사/명사", l: ["L9", "L10", "L11"] },
-    { w: "delicious", m: "맛있는", pos: "형용사", l: ["L10", "L11", "L12"] },
-    { w: "expensive", m: "비싼", pos: "형용사", l: ["L10", "L11", "L12"] },
-    { w: "cheap", m: "값싼", pos: "형용사", l: ["L10", "L11", "L12"] },
-    { w: "future", m: "미래", pos: "명사", l: ["L11", "L12"] },
-    { w: "scientist", m: "과학자", pos: "명사", l: ["L11", "L12"] }
+    { w: "country", m: "나라, 국가", pos: "명사", ex: "Where are you from? Which _____?", l: ["L1", "L2", "L3"] },
+    { w: "favorite", m: "가장 좋아하는", pos: "형용사", ex: "What is your _____ subject?", l: ["L2", "L3", "L4"] },
+    { w: "subject", m: "과목, 주제", pos: "명사", ex: "English is my favorite school _____.", l: ["L2", "L3", "L4"] },
+    { w: "science", m: "과학", pos: "명사", ex: "We do fun experiments in _____ class.", l: ["L2", "L3", "L4"] },
+    { w: "math", m: "수학", pos: "명사", ex: "I solve number puzzles in _____ class.", l: ["L2", "L3", "L4"] },
+    { w: "music", m: "음악", pos: "명사", ex: "We play the recorder in _____ class.", l: ["L2", "L3", "L5"] },
+    { w: "museum", m: "박물관", pos: "명사", ex: "We saw dinosaur bones at the _____.", l: ["L4", "L5", "L6"] },
+    { w: "library", m: "도서관", pos: "명사", ex: "Be quiet and read books in the _____.", l: ["L4", "L5", "L6"] },
+    { w: "hospital", m: "병원", pos: "명사", ex: "Doctors and nurses work at the _____.", l: ["L4", "L5", "L6"] },
+    { w: "straight", m: "똑바로, 곧장", pos: "부사/형용사", ex: "Go _____ two blocks and turn left.", l: ["L5", "L6", "L7"] },
+    { w: "between", m: "~ 사이에", pos: "전치사", ex: "The bank is _____ the post office and school.", l: ["L5", "L6", "L7"] },
+    { w: "behind", m: "~ 뒤에", pos: "전치사", ex: "The cat is hiding _____ the curtain.", l: ["L5", "L6", "L7"] },
+    { w: "season", m: "계절", pos: "명사", ex: "Spring, summer, fall, winter: four _____s.", l: ["L7", "L8", "L9"] },
+    { w: "spring", m: "봄", pos: "명사", ex: "Cherry blossoms bloom in _____.", l: ["L7", "L8", "L9"] },
+    { w: "summer", m: "여름", pos: "명사", ex: "It is very hot in _____.", l: ["L7", "L8", "L9"] },
+    { w: "autumn", m: "가을", pos: "명사", ex: "Leaves turn red and yellow in _____.", l: ["L7", "L8", "L9"] },
+    { w: "winter", m: "겨울", pos: "명사", ex: "We can make a snowman in _____.", l: ["L7", "L8", "L9"] },
+    { w: "vacation", m: "방학, 휴가", pos: "명사", ex: "What will you do during summer _____?", l: ["L8", "L9", "L10"] },
+    { w: "visit", m: "방문하다", pos: "동사", ex: "I will _____ my grandparents in Busan.", l: ["L8", "L9", "L10"] },
+    { w: "travel", m: "여행하다", pos: "동사/명사", ex: "I want to _____ around the world.", l: ["L9", "L10", "L11"] },
+    { w: "delicious", m: "맛있는", pos: "형용사", ex: "This bibimbap tastes really _____!", l: ["L10", "L11", "L12"] },
+    { w: "expensive", m: "비싼", pos: "형용사", ex: "That diamond ring is too _____.", l: ["L10", "L11", "L12"] },
+    { w: "cheap", m: "값싼", pos: "형용사", ex: "This pencil is only 500 won. It's _____.", l: ["L10", "L11", "L12"] },
+    { w: "future", m: "미래", pos: "명사", ex: "What do you want to be in the _____?", l: ["L11", "L12"] },
+    { w: "scientist", m: "과학자", pos: "명사", ex: "I want to be a great _____ and invent robots.", l: ["L11", "L12"] }
   ],
   "6학년": [
-    { w: "grade", m: "학년, 성적", pos: "명사", l: ["L1", "L2", "L3"] },
-    { w: "festival", m: "축제", pos: "명사", l: ["L1", "L2", "L3"] },
-    { w: "headache", m: "두통", pos: "명사", l: ["L2", "L3", "L4"] },
-    { w: "stomachache", m: "복통", pos: "명사", l: ["L2", "L3", "L4"] },
-    { w: "fever", m: "열, 발열", pos: "명사", l: ["L2", "L3", "L4"] },
-    { w: "medicine", m: "약, 의학", pos: "명사", l: ["L2", "L3", "L4"] },
-    { w: "exercise", m: "운동하다, 운동", pos: "동사/명사", l: ["L3", "L4", "L5"] },
-    { w: "healthy", m: "건강한", pos: "형용사", l: ["L3", "L4", "L5"] },
-    { w: "habit", m: "습관", pos: "명사", l: ["L4", "L5", "L6"] },
-    { w: "direction", m: "방향, 지시", pos: "명사", l: ["L5", "L6", "L7"] },
-    { w: "corner", m: "모퉁이", pos: "명사", l: ["L5", "L6", "L7"] },
-    { w: "across", m: "~을 가로질러, 건너편에", pos: "전치사/부사", l: ["L5", "L6", "L7"] },
-    { w: "concert", m: "음악회, 콘서트", pos: "명사", l: ["L6", "L7", "L8"] },
-    { w: "volunteer", m: "자원봉사자, 자원하다", pos: "명사/동사", l: ["L7", "L8", "L9"] },
-    { w: "environment", m: "환경", pos: "명사", l: ["L8", "L9", "L10"] },
-    { w: "recycle", m: "재활용하다", pos: "동사", l: ["L8", "L9", "L10"] },
-    { w: "energy", m: "에너지", pos: "명사", l: ["L8", "L9", "L10"] },
-    { w: "protect", m: "보호하다", pos: "동사", l: ["L9", "L10", "L11"] },
-    { w: "earth", m: "지구, 땅", pos: "명사", l: ["L9", "L10", "L11"] },
-    { w: "culture", m: "문화", pos: "명사", l: ["L10", "L11", "L12"] },
-    { w: "tradition", m: "전통", pos: "명사", l: ["L10", "L11", "L12"] },
-    { w: "important", m: "중요한", pos: "형용사", l: ["L10", "L11", "L12"] },
-    { w: "together", m: "함께", pos: "부사", l: ["L11", "L12"] },
-    { w: "memory", m: "기억, 추억", pos: "명사", l: ["L11", "L12"] },
-    { w: "graduate", m: "졸업하다", pos: "동사", l: ["L11", "L12"] }
+    { w: "grade", m: "학년, 성적", pos: "명사", ex: "I am in the sixth _____ now.", l: ["L1", "L2", "L3"] },
+    { w: "festival", m: "축제", pos: "명사", ex: "Our school _____ is next Friday.", l: ["L1", "L2", "L3"] },
+    { w: "headache", m: "두통", pos: "명사", ex: "My head hurts. I have a bad _____.", l: ["L2", "L3", "L4"] },
+    { w: "stomachache", m: "복통", pos: "명사", ex: "I ate too much ice cream. I have a _____.", l: ["L2", "L3", "L4"] },
+    { w: "fever", m: "열, 발열", pos: "명사", ex: "Your forehead is hot. You have a _____.", l: ["L2", "L3", "L4"] },
+    { w: "medicine", m: "약, 의학", pos: "명사", ex: "Take this _____ and get some rest.", l: ["L2", "L3", "L4"] },
+    { w: "exercise", m: "운동하다, 운동", pos: "동사/명사", ex: "You should _____ regularly to stay fit.", l: ["L3", "L4", "L5"] },
+    { w: "healthy", m: "건강한", pos: "형용사", ex: "Eat vegetables to keep your body _____.", l: ["L3", "L4", "L5"] },
+    { w: "habit", m: "습관", pos: "명사", ex: "Brushing your teeth is a good _____.", l: ["L4", "L5", "L6"] },
+    { w: "direction", m: "방향, 지시", pos: "명사", ex: "Follow the sign in the right _____.", l: ["L5", "L6", "L7"] },
+    { w: "corner", m: "모퉁이", pos: "명사", ex: "Turn right at the _____ of the street.", l: ["L5", "L6", "L7"] },
+    { w: "across", m: "~을 가로질러, 건너편에", pos: "전치사/부사", ex: "The bakery is _____ from the park.", l: ["L5", "L6", "L7"] },
+    { w: "concert", m: "음악회, 콘서트", pos: "명사", ex: "We played violins at the school _____.", l: ["L6", "L7", "L8"] },
+    { w: "volunteer", m: "자원봉사자, 자원하다", pos: "명사/동사", ex: "I work as a _____ at the animal shelter.", l: ["L7", "L8", "L9"] },
+    { w: "environment", m: "환경", pos: "명사", ex: "We must save energy to protect the _____.", l: ["L8", "L9", "L10"] },
+    { w: "recycle", m: "재활용하다", pos: "동사", ex: "Please _____ paper, cans, and plastic bottles.", l: ["L8", "L9", "L10"] },
+    { w: "energy", m: "에너지", pos: "명사", ex: "Turn off the lights to save _____.", l: ["L8", "L9", "L10"] },
+    { w: "protect", m: "보호하다", pos: "동사", ex: "Plant more trees to _____ our planet.", l: ["L9", "L10", "L11"] },
+    { w: "earth", m: "지구, 땅", pos: "명사", ex: "We all live together on planet _____.", l: ["L9", "L10", "L11"] },
+    { w: "culture", m: "문화", pos: "명사", ex: "Let's learn about Korean traditional _____.", l: ["L10", "L11", "L12"] },
+    { w: "tradition", m: "전통", pos: "명사", ex: "Hanbok is part of our beautiful _____.", l: ["L10", "L11", "L12"] },
+    { w: "important", m: "중요한", pos: "형용사", ex: "Helping each other is very _____.", l: ["L10", "L11", "L12"] },
+    { w: "together", m: "함께", pos: "부사", l: ["L11", "L12"], ex: "We can solve any problem _____." },
+    { w: "memory", m: "기억, 추억", pos: "명사", l: ["L11", "L12"], ex: "Our school trip is a wonderful _____." },
+    { w: "graduate", m: "졸업하다", pos: "동사", l: ["L11", "L12"], ex: "We will _____ from elementary school soon." }
   ]
 };
 
@@ -384,15 +445,18 @@ let state = {
   monsterIntent: "attack",
   monsterStunned: false,
   combo: 0,
+  maxCombo: 0,
+  dragonKilled: false,
   doubleDmg: false,
   currentSkill: "fireball",
+  quizMode: "normal", // 'normal' | 'listening' | 'cloze' | 'spelling'
   currentWord: null,
   isCursedWord: false,
   isGoblinEvent: false,
   pool: [],
   dex: new Set(),
-  cursedWords: [], // 이전 판 틀린 단어 (복수전 대상)
-  relics: [],      // 보유 중인 로그라이크 유물 ID
+  cursedWords: [],
+  relics: [],
   wrongNotes: [],
   timerId: null,
   timeLeftRatio: 1
@@ -413,17 +477,19 @@ function saveProgress() {
       maxExp: state.maxExp,
       weaponLv: state.weaponLv,
       avatarTier: state.avatarTier,
+      maxCombo: state.maxCombo,
+      dragonKilled: state.dragonKilled,
       dex: Array.from(state.dex),
       cursedWords: state.cursedWords,
       relics: state.relics
     };
-    localStorage.setItem("vocab_rpg_save_v1", JSON.stringify(data));
+    localStorage.setItem("vocab_rpg_save_v2", JSON.stringify(data));
   } catch (e) {}
 }
 
 function loadProgress() {
   try {
-    const raw = localStorage.getItem("vocab_rpg_save_v1");
+    const raw = localStorage.getItem("vocab_rpg_save_v2") || localStorage.getItem("vocab_rpg_save_v1");
     if (!raw) return;
     const data = JSON.parse(raw);
     state.job = data.job || "archer";
@@ -434,6 +500,8 @@ function loadProgress() {
     state.maxExp = data.maxExp || 100;
     state.weaponLv = data.weaponLv || 0;
     state.avatarTier = data.avatarTier || 1;
+    state.maxCombo = data.maxCombo || 0;
+    state.dragonKilled = !!data.dragonKilled;
     state.dex = new Set(data.dex || []);
     state.cursedWords = data.cursedWords || [];
     state.relics = data.relics || [];
@@ -506,6 +574,7 @@ function updateLobbyUI() {
   const tierObj = avatarTiers[state.avatarTier - 1];
   const atkBonus = state.weaponLv * 5;
   const wName = getWeaponName(state.job, state.weaponLv);
+  const titleBadge = getActiveTitle();
 
   document.getElementById("hud-stage").textContent = `STAGE ${state.stage}`;
   document.getElementById("hud-gold").textContent = state.gold;
@@ -513,14 +582,45 @@ function updateLobbyUI() {
 
   document.getElementById("lobby-hero-art").innerHTML = getHeroSvg(state.job, state.avatarTier);
   document.getElementById("menu-hero-lv").textContent = state.lv;
-  document.getElementById("menu-avatar-tier").textContent = tierObj.name.split(" · ")[1];
+  document.getElementById("menu-avatar-tier").textContent = `${tierObj.name.split(" · ")[1]} · ${titleBadge}`;
   document.getElementById("menu-hero-title").textContent = meta.title;
   document.getElementById("menu-weapon-info").textContent = `${meta.icon} ${wName} (+${state.weaponLv}) · 공격력 +${atkBonus}`;
 }
 
 // ==========================================
-// ⚔️ 전투 스테이지 진입 및 몬스터 의도 결정
+// ⚔️ 전투 스테이지 진입 및 유물 바 렌더링
 // ==========================================
+function renderRelicRibbon() {
+  let bar = document.getElementById("active-relics-bar");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "active-relics-bar";
+    const logBox = document.getElementById("battle-log");
+    if (logBox && logBox.parentNode) {
+      logBox.parentNode.insertBefore(bar, logBox);
+    }
+  }
+
+  if (state.relics.length === 0) {
+    bar.style.display = "none";
+    return;
+  }
+
+  bar.style.cssText = `
+    display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0;
+    padding: 6px 8px; background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 213, 79, 0.3); border-radius: 10px;
+  `;
+
+  bar.innerHTML = state.relics
+    .map(id => {
+      const r = relicPool.find(item => item.id === id);
+      if (!r) return "";
+      return `<span title="${r.desc}" style="background:rgba(255,213,79,0.15); border:1px solid #ffd54f; color:#fef08a; font-size:11px; padding:2px 7px; border-radius:6px; cursor:help;">${r.icon} ${r.name}</span>`;
+    })
+    .join("");
+}
+
 function getCurrentMonster() {
   const monIdx = (state.stage - 1) % monsterRoster.length;
   return monsterRoster[monIdx];
@@ -584,6 +684,7 @@ function startGame() {
   state.monsterStunned = false;
 
   const mon = getCurrentMonster();
+  const isBoss = mon.art === "dragon" || state.stage % 4 === 0;
   const scale = 1 + (state.stage - 1) * 0.18;
 
   state.monsterMaxHp = Math.round(mon.baseHp * scale);
@@ -598,6 +699,9 @@ function startGame() {
   document.getElementById("controls").style.display = "block";
   document.getElementById("battle-log").innerHTML = "";
 
+  applyStageAtmosphere(mon.art, isBoss);
+  renderRelicRibbon();
+
   const lessonName = state.lesson === "ALL" ? "전체 단원" : state.lesson;
   document.getElementById("current-scope-badge").textContent = `${state.grade} | ${state.pub} | ${lessonName}`;
   document.getElementById("hero-art-box").innerHTML = getHeroSvg(state.job, state.avatarTier);
@@ -606,14 +710,12 @@ function startGame() {
   decideNextMonsterIntent();
   updateBattleBars();
   addLog(`⚔️ STAGE ${state.stage} 시작! [${mon.name}] 등장!`);
-  if (state.relics.length > 0) {
-    const names = state.relics.map(id => relicPool.find(r => r.id === id)?.name).filter(Boolean).join(", ");
-    addLog(`🏺 적용 중인 축복 유물: ${names}`);
-  }
 }
 
 function backToMenu() {
   clearInterval(state.timerId);
+  document.body.style.background = "";
+  document.body.style.boxShadow = "none";
   document.getElementById("game-screen").style.display = "none";
   document.getElementById("selector-panel").style.display = "block";
   updateLobbyUI();
@@ -628,7 +730,7 @@ function updateBattleBars() {
   document.getElementById("hud-dex").textContent = state.dex.size;
 
   document.getElementById("hero-lv-text").textContent = state.lv;
-  document.getElementById("hero-title").textContent = meta.title;
+  document.getElementById("hero-title").textContent = `${meta.title} (${getActiveTitle()})`;
   document.getElementById("weapon-tag").textContent = `${meta.icon} ${wName} (+${state.weaponLv})`;
 
   document.getElementById("mage-hp-text").textContent = state.hp;
@@ -649,6 +751,10 @@ function updateBattleBars() {
 
   document.getElementById("warrior-rage-text").textContent = state.monsterRage;
   document.getElementById("warrior-rage-bar").style.width = `${state.monsterRage}%`;
+
+  // 피버 상태일 때 영웅 일러스트 황금 테두리 갱신
+  document.getElementById("hero-art-box").innerHTML = getHeroSvg(state.job, state.avatarTier);
+  updateDangerVignette();
 
   const comboBadge = document.getElementById("combo-badge");
   const feverBadge = document.getElementById("fever-badge");
@@ -690,7 +796,7 @@ function addLog(msg) {
 }
 
 // ==========================================
-// 🎯 스킬 사용 및 영어 퀴즈 출제 (저주 단어 & 보물 고블린)
+// 🎯 스킬 사용 및 다채로운 영어 퀴즈 출제 (듣기 / 예문 / 철자)
 // ==========================================
 function openQuiz(skillType) {
   if (skillType === "meditate") {
@@ -713,7 +819,6 @@ function openQuiz(skillType) {
   state.currentSkill = skillType;
   updateBattleBars();
 
-  // 1) 오답 복수전(저주받은 단어) 우선 출제 (40% 확률)
   state.isCursedWord = false;
   state.isGoblinEvent = false;
   let target = null;
@@ -729,7 +834,6 @@ function openQuiz(skillType) {
   }
   state.currentWord = target;
 
-  // 2) 15% 확률로 보물 고블린 난입!
   if (!state.isCursedWord && Math.random() < 0.15) {
     state.isGoblinEvent = true;
   }
@@ -742,13 +846,24 @@ function openQuiz(skillType) {
   hintBtn.disabled = false;
   hintBtn.textContent = `🔍 힌트 (${hintCost}G)`;
 
-  const skillNames = {
-    fireball: "🔥 기본 공격 퀴즈",
-    thunder: "⚡ 필살기 강타 (철자 입력)",
-    heal: "💚 치유 마법 퀴즈"
+  // 퀴즈 모드 결정: thunder -> spelling / 일반 -> normal, listening(25%), cloze(25%)
+  if (skillType === "thunder") {
+    state.quizMode = "spelling";
+  } else {
+    const r = Math.random();
+    if (r < 0.25) state.quizMode = "listening";
+    else if (r < 0.50 && target.ex) state.quizMode = "cloze";
+    else state.quizMode = "normal";
+  }
+
+  const modeLabels = {
+    normal: "🔥 기본 공격 퀴즈",
+    listening: "🎧 원어민 듣기 평가 (적중 시 치명타율 2배!)",
+    cloze: "📝 영어 예문 빈칸 완성 (적중 시 피해 +20%!)",
+    spelling: "⚡ 필살기 강타 (철자 입력)"
   };
 
-  let headerText = skillNames[skillType];
+  let headerText = skillType === "heal" ? "💚 치유 마법 퀴즈" : modeLabels[state.quizMode];
   if (state.isCursedWord) headerText = `💀 [복수전] 저주받은 단어! (정답 시 +40G)`;
   if (state.isGoblinEvent) headerText = `💰 [돌발!] 보물 고블린 난입! (빠른 정답 시 +100G!)`;
 
@@ -757,19 +872,28 @@ function openQuiz(skillType) {
 
   const optionsBox = document.getElementById("quiz-options");
   const spellingBox = document.getElementById("spelling-box");
+  const qEl = document.getElementById("quiz-question");
 
-  if (skillType === "thunder") {
-    document.getElementById("quiz-question").textContent = `뜻: "${target.m}" → 영어 철자 입력!`;
+  if (state.quizMode === "spelling") {
+    qEl.textContent = `뜻: "${target.m}" → 영어 철자 입력!`;
     optionsBox.style.display = "none";
     spellingBox.style.display = "flex";
     const input = document.getElementById("spelling-input");
     input.value = "";
     input.focus();
   } else {
-    document.getElementById("quiz-question").textContent = target.w;
-    speakCurrentWord();
     spellingBox.style.display = "none";
     optionsBox.style.display = "grid";
+
+    if (state.quizMode === "listening") {
+      qEl.innerHTML = `🔊 <strong>소리를 듣고 뜻을 고르세요!</strong> <button onclick="speakCurrentWord()" style="margin-left:6px; padding:3px 8px; border-radius:6px; border:none; background:#38bdf8; color:#0f172a; font-weight:bold; cursor:pointer;">다시 듣기</button>`;
+      speakCurrentWord();
+    } else if (state.quizMode === "cloze") {
+      qEl.innerHTML = `<div style="font-size:15px; color:#fef08a;">"${target.ex}"</div><div style="font-size:12px; color:#94a3b8; margin-top:4px;">빈칸에 들어갈 단어의 뜻은?</div>`;
+    } else {
+      qEl.textContent = target.w;
+      speakCurrentWord();
+    }
 
     const allGradeWords = vocabDict[state.grade];
     const distractors = allGradeWords
@@ -829,9 +953,9 @@ function submitSpelling() {
 
 function handleCorrectAnswer() {
   state.combo++;
+  if (state.combo > state.maxCombo) state.maxCombo = state.combo;
   state.dex.add(state.currentWord.w);
 
-  // 저주 해제 및 보물 고블린 보상 처리
   let bonusGoldMsg = "";
   if (state.isCursedWord) {
     state.cursedWords = state.cursedWords.filter(w => w !== state.currentWord.w);
@@ -843,7 +967,6 @@ function handleCorrectAnswer() {
     bonusGoldMsg += " 💰 [보물 고블린 처치! +100G]";
   }
 
-  // 유물 패시브 발동
   if (hasRelic("vampire")) {
     state.hp = Math.min(state.maxHp, state.hp + 10);
   }
@@ -869,9 +992,13 @@ function handleCorrectAnswer() {
   const meta = jobMeta[state.job];
   let dmg = meta.baseAtk + state.weaponLv * 5 + (state.lv - 1) * 4;
 
+  // 무기 +5강 특수 시너지: 화염 추가 피해 +12
+  if (state.weaponLv >= 5) dmg += 12;
+
   if (state.currentSkill === "thunder") {
     dmg = Math.round(dmg * (hasRelic("spell_master") ? 2.0 : 1.65));
   }
+  if (state.quizMode === "cloze") dmg = Math.round(dmg * 1.2);
   if (state.job === "mage") dmg += 5;
   if (state.combo >= 3) dmg = Math.round(dmg * 1.4);
   if (hasRelic("berserker") && state.hp <= state.maxHp * 0.45) {
@@ -887,9 +1014,16 @@ function handleCorrectAnswer() {
   }
 
   let critChance = state.job === "archer" ? 0.45 : 0.22;
+  if (state.quizMode === "listening") critChance *= 2;
   if (hasRelic("crit_ring")) critChance += 0.20;
   const isCrit = Math.random() < critChance;
-  if (isCrit) dmg = Math.round(dmg * (hasRelic("crit_ring") ? 1.8 : 1.5));
+  if (isCrit) {
+    dmg = Math.round(dmg * (hasRelic("crit_ring") ? 1.8 : 1.5));
+    // 무기 +3강 특수 시너지: 치명타 적중 시 MP +8 회복
+    if (state.weaponLv >= 3) {
+      state.mp = Math.min(state.maxMp, state.mp + 8);
+    }
+  }
 
   let guardMsg = "";
   if (state.monsterIntent === "guard" && state.currentSkill !== "thunder") {
@@ -912,7 +1046,11 @@ function handleCorrectAnswer() {
   playSfx(isCrit || stunMsg ? "crit" : "hit");
   triggerHitEffect("monster-art-box", `${isCrit ? "💥 " : "-"}${dmg}!`, isCrit ? "#ffea00" : "#ff5252");
 
-  const tags = [isFast ? "⚡신속" : "", isCrit ? "💥치명타" : ""].filter(Boolean).join(" ");
+  const tags = [
+    state.quizMode === "listening" ? "🎧듣기" : "",
+    isFast ? "⚡신속" : "",
+    isCrit ? "💥치명타" : ""
+  ].filter(Boolean).join(" ");
   addLog(`⚔️ ${tags ? `[${tags}] ` : ""}정답(${state.currentWord.w})! ${dmg} 데미지!${guardMsg}${stunMsg}${bonusGoldMsg}`);
 
   saveProgress();
@@ -1034,10 +1172,13 @@ function monsterTurn() {
 }
 
 // ==========================================
-// 🏆 전투 승리 & 로그라이크 유물 3지선다 선택
+// 🏆 전투 승리 & 떠돌이 상인 & 로그라이크 유물 선택
 // ==========================================
 function winBattle() {
   playSfx("win");
+  const mon = getCurrentMonster();
+  if (mon.art === "dragon") state.dragonKilled = true;
+
   const relicGold = hasRelic("gold_pouch") ? 30 : 0;
   const goldReward = 45 + state.stage * 12 + relicGold;
   const expReward = 60;
@@ -1052,21 +1193,22 @@ function winBattle() {
     lvMsg = ` 🎉 레벨 업! (Lv.${state.lv})`;
   }
 
+  const clearedStage = state.stage;
   addLog(`🏆 승리! +${goldReward}G, +${expReward} EXP 획득!${lvMsg}`);
   state.stage++;
   saveProgress();
   updateBattleBars();
 
-  showResultPanel(true);
+  showResultPanel(true, clearedStage);
 }
 
 function loseBattle() {
   addLog(`💀 영웅이 쓰러졌습니다... 대장간에서 무기를 강화하거나 아바타를 진화시켜 보세요!`);
   saveProgress();
-  showResultPanel(false);
+  showResultPanel(false, state.stage);
 }
 
-function showResultPanel(isWin) {
+function showResultPanel(isWin, clearedStage) {
   document.getElementById("controls").style.display = "none";
   const resultPanel = document.getElementById("result-panel");
   const notesBox = document.getElementById("wrong-notes-box");
@@ -1076,6 +1218,25 @@ function showResultPanel(isWin) {
   restartBtn.textContent = isWin ? `🚀 STAGE ${state.stage} 도전!` : `🔄 현재 스테이지 재도전`;
 
   let html = "";
+
+  // 3스테이지마다 떠돌이 고블린 상인 이벤트 등장!
+  if (isWin && clearedStage % 3 === 0) {
+    html += `
+      <div id="merchant-box" style="margin-bottom:14px; padding:12px; background:rgba(56,189,248,0.12); border:1px solid #38bdf8; border-radius:12px;">
+        <h4 style="margin:0 0 8px 0; color:#38bdf8;">⛺ 떠돌이 고블린 상인 조우! (보유 골드: <span id="merch-gold">${state.gold}</span>G)</h4>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px;">
+          <button onclick="buyMerchantItem('fullheal')" style="padding:8px; background:#0f172a; border:1px solid #4ecca3; border-radius:8px; color:#fff; cursor:pointer;">
+            💖 <strong>영약 마시기 (30G)</strong><br><small style="color:#94a3b8;">다음 전투 체력 완전 회복</small>
+          </button>
+          <button onclick="buyMerchantItem('forge')" style="padding:8px; background:#0f172a; border:1px solid #fbbf24; border-radius:8px; color:#fff; cursor:pointer;">
+            🔨 <strong>특가 무기 제련 (60G)</strong><br><small style="color:#94a3b8;">무기 강화 +1 즉시 상승</small>
+          </button>
+          <button onclick="buyMerchantItem('relic')" style="padding:8px; background:#0f172a; border:1px solid #c084fc; border-radius:8px; color:#fff; cursor:pointer;">
+            🎁 <strong>미지의 유물 상자 (80G)</strong><br><small style="color:#94a3b8;">랜덤 고대 유물 1개 획득</small>
+          </button>
+        </div>
+      </div>`;
+  }
 
   // 승리 시 보유하지 않은 유물 3개 중 1개 선택 UI 표시
   if (isWin) {
@@ -1087,8 +1248,8 @@ function showResultPanel(isWin) {
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px;">
             ${available.map(r => `
               <button onclick="pickRelic('${r.id}')" style="padding:10px; background:#1e293b; border:1px solid #64748b; border-radius:10px; color:#fff; cursor:pointer; text-align:left;">
-                <div style="font-size:18px;">${r.icon} <strong>${r.name}</strong></div>
-                <div style="font-size:12px; color:#cbd5e1; margin-top:4px;">${r.desc}</div>
+                <div style="font-size:16px;">${r.icon} <strong>${r.name}</strong></div>
+                <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">${r.desc}</div>
               </button>
             `).join("")}
           </div>
@@ -1106,10 +1267,41 @@ function showResultPanel(isWin) {
   notesBox.innerHTML = html;
 }
 
+function buyMerchantItem(type) {
+  if (type === "fullheal") {
+    if (state.gold < 30) return alert("골드가 부족합니다! (30G 필요)");
+    state.gold -= 30;
+    state.hp = state.maxHp;
+    playSfx("heal");
+    alert("💖 상인의 특제 영약으로 체력이 가득 찼습니다!");
+  } else if (type === "forge") {
+    if (state.gold < 60) return alert("골드가 부족합니다! (60G 필요)");
+    state.gold -= 60;
+    state.weaponLv++;
+    playSfx("win");
+    alert(`🔨 무기 강화 성공! 현재 무기: +${state.weaponLv}강`);
+  } else if (type === "relic") {
+    if (state.gold < 80) return alert("골드가 부족합니다! (80G 필요)");
+    const unowned = relicPool.filter(r => !hasRelic(r.id));
+    if (unowned.length === 0) return alert("이미 모든 고대 유물을 보유하고 있습니다!");
+    state.gold -= 80;
+    const picked = unowned[Math.floor(Math.random() * unowned.length)];
+    state.relics.push(picked.id);
+    playSfx("win");
+    renderRelicRibbon();
+    alert(`🎁 [${picked.icon} ${picked.name}] 획득! (${picked.desc})`);
+  }
+  const gEl = document.getElementById("merch-gold");
+  if (gEl) gEl.textContent = state.gold;
+  saveProgress();
+  updateBattleBars();
+}
+
 function pickRelic(id) {
   if (!hasRelic(id)) {
     state.relics.push(id);
     saveProgress();
+    renderRelicRibbon();
   }
   const r = relicPool.find(item => item.id === id);
   const box = document.getElementById("relic-choice-box");
@@ -1145,7 +1337,7 @@ function useHintMagnifier() {
   btn.disabled = true;
   const w = state.currentWord.w;
 
-  if (state.currentSkill === "thunder") {
+  if (state.quizMode === "spelling") {
     const masked = w
       .split("")
       .map((ch, idx) => (idx === 0 || idx === w.length - 1 || idx % 2 === 0 ? ch : "_"))
@@ -1194,10 +1386,15 @@ function openForgeModal() {
   const grades = ["일반 무기", "고급 무기", "희귀 무기", "영웅 무기", "전설 무기", "신화 무기"];
   const gradeName = grades[Math.min(grades.length - 1, Math.floor(state.weaponLv / 2))];
   const wName = getWeaponName(state.job, state.weaponLv);
+  const synergyText = state.weaponLv >= 5
+    ? "🔥 특수옵션: 치명타 MP+8 & 화염 추가피해 +12"
+    : state.weaponLv >= 3
+      ? "✨ 특수옵션: 치명타 적중 시 MP +8 회복"
+      : "💡 +3강 달성 시 치명타 MP회복 해금!";
 
   document.getElementById("forge-weapon-icon").textContent = meta.icon;
   document.getElementById("forge-weapon-name").textContent = `${wName} (+${state.weaponLv})`;
-  document.getElementById("forge-weapon-grade").textContent = `등급: ${gradeName}`;
+  document.getElementById("forge-weapon-grade").textContent = `등급: ${gradeName} | ${synergyText}`;
   document.getElementById("forge-cur-atk").textContent = state.weaponLv * 5;
   document.getElementById("forge-next-atk").textContent = (state.weaponLv + 1) * 5;
   document.getElementById("forge-cost-text").textContent = cost;
