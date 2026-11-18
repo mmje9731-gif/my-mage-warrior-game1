@@ -1,20 +1,105 @@
-// 🎨 영웅 일러스트 & 아바타 티어별 진화 + 무기 강화 이펙트 렌더러
+// ==========================================
+// 🔊 Web Audio API 효과음 생성기 (외부 파일 불필요)
+// ==========================================
+const audioCtx = typeof window !== "undefined" && (window.AudioContext || window.webkitAudioContext)
+  ? new (window.AudioContext || window.webkitAudioContext)()
+  : null;
+
+function playSfx(type) {
+  if (!audioCtx) return;
+  if (audioCtx.state === "suspended") audioCtx.resume();
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+
+  if (type === "hit") {
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(90, now + 0.15);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } else if (type === "crit") {
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.28);
+    gain.gain.setValueAtTime(0.32, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+    osc.start(now);
+    osc.stop(now + 0.28);
+  } else if (type === "hurt") {
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.linearRampToValueAtTime(65, now + 0.22);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+    osc.start(now);
+    osc.stop(now + 0.22);
+  } else if (type === "heal") {
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.25);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    osc.start(now);
+    osc.stop(now + 0.25);
+  } else if (type === "win") {
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = "triangle";
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.frequency.setValueAtTime(freq, now + i * 0.09);
+      g.gain.setValueAtTime(0.18, now + i * 0.09);
+      g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.09 + 0.25);
+      o.start(now + i * 0.09);
+      o.stop(now + i * 0.09 + 0.25);
+    });
+  }
+}
+
+// 💥 타격감 애니메이션 & 데미지 숫자 팝업
+function triggerHitEffect(targetBoxId, text, color) {
+  const box = document.getElementById(targetBoxId);
+  if (!box) return;
+
+  box.style.transition = "transform 0.06s";
+  box.style.transform = "translateX(-8px) scale(0.96)";
+  setTimeout(() => (box.style.transform = "translateX(8px) scale(1.03)"), 60);
+  setTimeout(() => (box.style.transform = "translateX(0) scale(1)"), 130);
+
+  const dmgEl = document.createElement("div");
+  dmgEl.textContent = text;
+  dmgEl.style.cssText = `
+    position:absolute; top:30%; left:50%; transform:translate(-50%, -50%);
+    color:${color}; font-size:22px; font-weight:900; text-shadow:0 2px 8px #000;
+    pointer-events:none; z-index:50; transition:all 0.75s ease-out; opacity:1;
+  `;
+  box.style.position = "relative";
+  box.appendChild(dmgEl);
+
+  requestAnimationFrame(() => {
+    dmgEl.style.top = "-10%";
+    dmgEl.style.opacity = "0";
+  });
+  setTimeout(() => dmgEl.remove(), 780);
+}
+
+// ==========================================
+// 🎨 영웅 & 몬스터 고화질 일러스트 렌더러
+// ==========================================
 function getHeroSvg(job, avatarTier) {
   const wLv = typeof state !== "undefined" ? state.weaponLv : 0;
 
   const heroImages = {
-    archer: {
-      base: "archer.png",
-      awakened: "archer_awakened.png"
-    },
-    mage: {
-      base: "mage.png",
-      awakened: "mage_awakened.png"
-    },
-    paladin: {
-      base: "paladin.png",
-      awakened: "paladin.awakened.png"
-    }
+    archer: { base: "archer.png", awakened: "archer_awakened.png" },
+    mage: { base: "mage.png", awakened: "mage_awakened.png" },
+    paladin: { base: "paladin.png", awakened: "paladin.awakened.png" }
   };
 
   const isAwakened = avatarTier >= 3;
@@ -53,7 +138,6 @@ function getHeroSvg(job, avatarTier) {
     </div>`;
 }
 
-// 👾 8종 몬스터 고화질 일러스트 매핑
 const monsterImages = {
   slime: "slime.png",
   bat: "bat.png",
@@ -99,6 +183,18 @@ const monsterRoster = [
   { art: "darkmage", name: "어둠의 흑마법사", baseHp: 260, baseAtk: 26, trait: "암흑 저주: 방어막과 마나 흡수를 병행" },
   { art: "werewolf", name: "황금 늑대인간", baseHp: 295, baseAtk: 29, trait: "광란의 발톱: 높은 확률로 2연속 공격" },
   { art: "dragon", name: "레드 드래곤", baseHp: 350, baseAtk: 34, trait: "용의 위압감: 브레스 차징 & 화상 피해" }
+];
+
+// 🏺 로그라이크 유물(축복) 풀
+const relicPool = [
+  { id: "vampire", icon: "🧛", name: "흡혈의 송곳니", desc: "정답을 맞출 때마다 HP +10 회복" },
+  { id: "mana_spring", icon: "💧", name: "마나 샘물", desc: "2콤보 이상 달성 시 MP +15 추가 회복" },
+  { id: "sage_glasses", icon: "👓", name: "현자의 안경", desc: "퀴즈 제한시간 +3초 & 힌트 비용 10G로 할인" },
+  { id: "berserker", icon: "💢", name: "광전사의 문장", desc: "HP가 45% 이하일 때 공격력 1.6배 증가" },
+  { id: "gold_pouch", icon: "💰", name: "황금 탐욕 주머니", desc: "전투 승리 시 획득 골드 +30G 추가" },
+  { id: "crit_ring", icon: "💍", name: "매의 눈 반지", desc: "치명타 확률 +20% 및 치명타 피해량 증가" },
+  { id: "iron_heart", icon: "🛡️", name: "강철 심장", desc: "최대 HP +40 즉시 증가 및 받는 피해 -3" },
+  { id: "spell_master", icon: "📖", name: "대현자의 마도서", desc: "철자 필살기(⚡) 데미지 +35% 추가 상승" }
 ];
 
 // 📚 2022 개정 초등 영어 어휘 사전
@@ -243,7 +339,7 @@ const lessonsList = [
 ];
 
 // ==========================================
-// ⚔️ 게임 상태 & 직업/장비 설정 데이터
+// ⚔️ 게임 상태 & 자동 저장(localStorage)
 // ==========================================
 const jobMeta = {
   archer: { title: "바람의 궁수", icon: "🏹", weapons: ["참나무 활", "정령의 장궁", "천공의 황금활"], baseHp: 100, baseAtk: 21 },
@@ -285,23 +381,74 @@ let state = {
   monsterMaxHp: 135,
   monsterAtk: 14,
   monsterRage: 0,
-  monsterIntent: "attack", // 'attack' | 'charge' | 'guard' | 'special'
+  monsterIntent: "attack",
   monsterStunned: false,
   combo: 0,
   doubleDmg: false,
   currentSkill: "fireball",
   currentWord: null,
+  isCursedWord: false,
+  isGoblinEvent: false,
   pool: [],
   dex: new Set(),
+  cursedWords: [], // 이전 판 틀린 단어 (복수전 대상)
+  relics: [],      // 보유 중인 로그라이크 유물 ID
   wrongNotes: [],
   timerId: null,
   timeLeftRatio: 1
 };
 
+function hasRelic(id) {
+  return state.relics.includes(id);
+}
+
+function saveProgress() {
+  try {
+    const data = {
+      job: state.job,
+      stage: state.stage,
+      gold: state.gold,
+      lv: state.lv,
+      exp: state.exp,
+      maxExp: state.maxExp,
+      weaponLv: state.weaponLv,
+      avatarTier: state.avatarTier,
+      dex: Array.from(state.dex),
+      cursedWords: state.cursedWords,
+      relics: state.relics
+    };
+    localStorage.setItem("vocab_rpg_save_v1", JSON.stringify(data));
+  } catch (e) {}
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem("vocab_rpg_save_v1");
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    state.job = data.job || "archer";
+    state.stage = data.stage || 1;
+    state.gold = data.gold ?? 50;
+    state.lv = data.lv || 1;
+    state.exp = data.exp || 0;
+    state.maxExp = data.maxExp || 100;
+    state.weaponLv = data.weaponLv || 0;
+    state.avatarTier = data.avatarTier || 1;
+    state.dex = new Set(data.dex || []);
+    state.cursedWords = data.cursedWords || [];
+    state.relics = data.relics || [];
+  } catch (e) {}
+}
+
 // ==========================================
 // 🚀 초기화 및 로비 UI 컨트롤
 // ==========================================
 window.addEventListener("DOMContentLoaded", () => {
+  loadProgress();
+  document.querySelectorAll(".hero-btn").forEach(btn => btn.classList.remove("active"));
+  const activeBtn = document.getElementById(`hero-${state.job}`);
+  if (activeBtn) activeBtn.classList.add("active");
+
   onGradeChange();
   updateLobbyUI();
 });
@@ -311,6 +458,7 @@ function selectHero(job) {
   document.querySelectorAll(".hero-btn").forEach(btn => btn.classList.remove("active"));
   const activeBtn = document.getElementById(`hero-${job}`);
   if (activeBtn) activeBtn.classList.add("active");
+  saveProgress();
   updateLobbyUI();
 }
 
@@ -379,9 +527,7 @@ function getCurrentMonster() {
 }
 
 function decideNextMonsterIntent() {
-  const mon = getCurrentMonster();
   const roll = Math.random();
-
   if (state.monsterRage >= 80) {
     state.monsterIntent = "charge";
   } else if (roll < 0.25) {
@@ -393,7 +539,6 @@ function decideNextMonsterIntent() {
   } else {
     state.monsterIntent = "attack";
   }
-
   updateMonsterSpeech();
 }
 
@@ -409,11 +554,11 @@ function updateMonsterSpeech() {
   }
 
   if (state.monsterIntent === "charge") {
-    speechEl.innerHTML = `<span style="color:#ff5252; font-weight:bold;">🔥 [예고] 필살 강타 준비 중! (철자 필살기로 끊기 가능!)</span>`;
+    speechEl.innerHTML = `<span style="color:#ff5252; font-weight:bold;">🔥 [예고] 필살 강타 준비! (⚡철자 필살기로 기절 가능!)</span>`;
   } else if (state.monsterIntent === "guard") {
-    speechEl.innerHTML = `<span style="color:#40c4ff; font-weight:bold;">🛡️ [예고] 방어 태세! (받는 피해 75% 감소 · 명상 추천)</span>`;
+    speechEl.innerHTML = `<span style="color:#40c4ff; font-weight:bold;">🛡️ [예고] 방어 태세! (피해 75% 감소 · 명상 추천)</span>`;
   } else if (state.monsterIntent === "special") {
-    speechEl.innerHTML = `<span style="color:#ea80fc; font-weight:bold;">🌀 [예고] 특수 능력 발동 예정! (${mon.trait})</span>`;
+    speechEl.innerHTML = `<span style="color:#ea80fc; font-weight:bold;">🌀 [예고] 특수기 예정! (${mon.trait})</span>`;
   } else {
     speechEl.innerHTML = `<span style="color:#e2e8f0;">⚔️ [예고] 일반 공격 준비 (예상 피해: ~${state.monsterAtk})</span>`;
   }
@@ -427,17 +572,18 @@ function startGame() {
 
   const meta = jobMeta[state.job];
   const tierObj = avatarTiers[state.avatarTier - 1];
-  state.maxHp = meta.baseHp + (state.lv - 1) * 15 + tierObj.hpBonus;
+  const relicHp = hasRelic("iron_heart") ? 40 : 0;
+
+  state.maxHp = meta.baseHp + (state.lv - 1) * 15 + tierObj.hpBonus + relicHp;
   state.hp = state.maxHp;
   state.maxMp = 100;
-  state.mp = 60; // 마나 관리 전략성을 위해 60으로 시작
+  state.mp = 60;
   state.combo = 0;
   state.doubleDmg = false;
   state.wrongNotes = [];
   state.monsterStunned = false;
 
   const mon = getCurrentMonster();
-  // 스테이지별 난이도 곡선 상향 (스테이지당 18%씩 강해짐)
   const scale = 1 + (state.stage - 1) * 0.18;
 
   state.monsterMaxHp = Math.round(mon.baseHp * scale);
@@ -459,7 +605,11 @@ function startGame() {
 
   decideNextMonsterIntent();
   updateBattleBars();
-  addLog(`⚔️ STAGE ${state.stage} 시작! [${mon.name}] 등장! (특성: ${mon.trait})`);
+  addLog(`⚔️ STAGE ${state.stage} 시작! [${mon.name}] 등장!`);
+  if (state.relics.length > 0) {
+    const names = state.relics.map(id => relicPool.find(r => r.id === id)?.name).filter(Boolean).join(", ");
+    addLog(`🏺 적용 중인 축복 유물: ${names}`);
+  }
 }
 
 function backToMenu() {
@@ -540,13 +690,14 @@ function addLog(msg) {
 }
 
 // ==========================================
-// 🎯 스킬 사용 및 영어 퀴즈 출제
+// 🎯 스킬 사용 및 영어 퀴즈 출제 (저주 단어 & 보물 고블린)
 // ==========================================
 function openQuiz(skillType) {
   if (skillType === "meditate") {
     const recover = 45;
     state.mp = Math.min(state.maxMp, state.mp + recover);
-    addLog(`✨ 마나 명상으로 MP를 +${recover} 회복했습니다! (방어 태세 회피에 유용!)`);
+    playSfx("heal");
+    addLog(`✨ 마나 명상으로 MP를 +${recover} 회복했습니다!`);
     updateBattleBars();
     setTimeout(monsterTurn, 400);
     return;
@@ -562,20 +713,46 @@ function openQuiz(skillType) {
   state.currentSkill = skillType;
   updateBattleBars();
 
-  const target = state.pool[Math.floor(Math.random() * state.pool.length)];
+  // 1) 오답 복수전(저주받은 단어) 우선 출제 (40% 확률)
+  state.isCursedWord = false;
+  state.isGoblinEvent = false;
+  let target = null;
+
+  if (state.cursedWords.length > 0 && Math.random() < 0.4) {
+    const cursedW = state.cursedWords[0];
+    target = state.pool.find(item => item.w === cursedW) || vocabDict[state.grade].find(item => item.w === cursedW);
+    if (target) state.isCursedWord = true;
+  }
+
+  if (!target) {
+    target = state.pool[Math.floor(Math.random() * state.pool.length)];
+  }
   state.currentWord = target;
+
+  // 2) 15% 확률로 보물 고블린 난입!
+  if (!state.isCursedWord && Math.random() < 0.15) {
+    state.isGoblinEvent = true;
+  }
 
   document.getElementById("controls").style.display = "none";
   document.getElementById("quiz-box").style.display = "block";
-  document.getElementById("hint-btn").disabled = false;
-  document.getElementById("hint-btn").textContent = "🔍 힌트 (20G)";
+
+  const hintCost = hasRelic("sage_glasses") ? 10 : 20;
+  const hintBtn = document.getElementById("hint-btn");
+  hintBtn.disabled = false;
+  hintBtn.textContent = `🔍 힌트 (${hintCost}G)`;
 
   const skillNames = {
-    fireball: "🔥 기본 공격 (빠른 정답 시 신속 강타!)",
-    thunder: "⚡ 필살기 강타 (차징 중인 적 기절 가능!)",
+    fireball: "🔥 기본 공격 퀴즈",
+    thunder: "⚡ 필살기 강타 (철자 입력)",
     heal: "💚 치유 마법 퀴즈"
   };
-  document.getElementById("quiz-skill-name").textContent = skillNames[skillType];
+
+  let headerText = skillNames[skillType];
+  if (state.isCursedWord) headerText = `💀 [복수전] 저주받은 단어! (정답 시 +40G)`;
+  if (state.isGoblinEvent) headerText = `💰 [돌발!] 보물 고블린 난입! (빠른 정답 시 +100G!)`;
+
+  document.getElementById("quiz-skill-name").textContent = headerText;
   document.getElementById("quiz-pos").textContent = `[${target.pos}]`;
 
   const optionsBox = document.getElementById("quiz-options");
@@ -606,9 +783,9 @@ function openQuiz(skillType) {
       .join("");
   }
 
-  // 얼음 골렘의 빙결 오라(8초), 일반 몬스터(11초)
   const mon = getCurrentMonster();
-  const limitSec = mon.art === "golem" ? 8 : 11;
+  let limitSec = mon.art === "golem" ? 8 : 11;
+  if (hasRelic("sage_glasses")) limitSec += 3;
   startQuizTimer(limitSec);
 }
 
@@ -654,13 +831,36 @@ function handleCorrectAnswer() {
   state.combo++;
   state.dex.add(state.currentWord.w);
 
+  // 저주 해제 및 보물 고블린 보상 처리
+  let bonusGoldMsg = "";
+  if (state.isCursedWord) {
+    state.cursedWords = state.cursedWords.filter(w => w !== state.currentWord.w);
+    state.gold += 40;
+    bonusGoldMsg += " 💀 [복수 성공! +40G]";
+  }
+  if (state.isGoblinEvent) {
+    state.gold += 100;
+    bonusGoldMsg += " 💰 [보물 고블린 처치! +100G]";
+  }
+
+  // 유물 패시브 발동
+  if (hasRelic("vampire")) {
+    state.hp = Math.min(state.maxHp, state.hp + 10);
+  }
+  if (hasRelic("mana_spring") && state.combo >= 2) {
+    state.mp = Math.min(state.maxMp, state.mp + 15);
+  }
+
   document.getElementById("quiz-box").style.display = "none";
   document.getElementById("controls").style.display = "block";
 
   if (state.currentSkill === "heal") {
     const healAmt = 50 + state.lv * 6;
     state.hp = Math.min(state.maxHp, state.hp + healAmt);
-    addLog(`💚 치유 마법 성공! 체력을 +${healAmt} 회복했습니다!`);
+    playSfx("heal");
+    triggerHitEffect("hero-art-box", `+${healAmt} HP`, "#4ecca3");
+    addLog(`💚 치유 마법 성공! 체력을 +${healAmt} 회복했습니다!${bonusGoldMsg}`);
+    saveProgress();
     updateBattleBars();
     setTimeout(monsterTurn, 450);
     return;
@@ -669,12 +869,15 @@ function handleCorrectAnswer() {
   const meta = jobMeta[state.job];
   let dmg = meta.baseAtk + state.weaponLv * 5 + (state.lv - 1) * 4;
 
-  // 스킬 및 직업 보너스
-  if (state.currentSkill === "thunder") dmg = Math.round(dmg * 1.65);
+  if (state.currentSkill === "thunder") {
+    dmg = Math.round(dmg * (hasRelic("spell_master") ? 2.0 : 1.65));
+  }
   if (state.job === "mage") dmg += 5;
   if (state.combo >= 3) dmg = Math.round(dmg * 1.4);
+  if (hasRelic("berserker") && state.hp <= state.maxHp * 0.45) {
+    dmg = Math.round(dmg * 1.6);
+  }
 
-  // 신속 강타 (제한 시간 65% 이상 남았을 때)
   const isFast = state.timeLeftRatio >= 0.65;
   if (isFast) dmg = Math.round(dmg * 1.35);
 
@@ -683,20 +886,19 @@ function handleCorrectAnswer() {
     state.doubleDmg = false;
   }
 
-  const critChance = state.job === "archer" ? 0.45 : 0.22;
+  let critChance = state.job === "archer" ? 0.45 : 0.22;
+  if (hasRelic("crit_ring")) critChance += 0.20;
   const isCrit = Math.random() < critChance;
-  if (isCrit) dmg = Math.round(dmg * 1.5);
+  if (isCrit) dmg = Math.round(dmg * (hasRelic("crit_ring") ? 1.8 : 1.5));
 
-  // 몬스터 방어 태세 판정 (피해 75% 감소, 단 필살기(thunder)는 방어 관통!)
   let guardMsg = "";
   if (state.monsterIntent === "guard" && state.currentSkill !== "thunder") {
     dmg = Math.max(3, Math.round(dmg * 0.25));
-    guardMsg = " (🛡️ 적의 방어 태세로 피해 감소!)";
+    guardMsg = " (🛡️ 방어 태세로 피해 감소!)";
   } else if (state.monsterIntent === "guard" && state.currentSkill === "thunder") {
-    guardMsg = " (⚡ 필살기로 적의 방어 태세 관통!)";
+    guardMsg = " (⚡ 필살기로 방어 관통!)";
   }
 
-  // 필살 차징 중인 몬스터를 필살기(thunder)로 공격하면 기절(브레이크)!
   let stunMsg = "";
   if (state.monsterIntent === "charge" && state.currentSkill === "thunder") {
     state.monsterStunned = true;
@@ -707,12 +909,13 @@ function handleCorrectAnswer() {
   state.monsterHp = Math.max(0, state.monsterHp - dmg);
   state.monsterRage = Math.min(100, state.monsterRage + 25);
 
-  const tags = [
-    isFast ? "⚡신속강타" : "",
-    isCrit ? "💥치명타" : ""
-  ].filter(Boolean).join(" ");
+  playSfx(isCrit || stunMsg ? "crit" : "hit");
+  triggerHitEffect("monster-art-box", `${isCrit ? "💥 " : "-"}${dmg}!`, isCrit ? "#ffea00" : "#ff5252");
 
-  addLog(`⚔️ ${tags ? `[${tags}] ` : ""}정답(${state.currentWord.w})! ${dmg} 데미지!${guardMsg}${stunMsg}`);
+  const tags = [isFast ? "⚡신속" : "", isCrit ? "💥치명타" : ""].filter(Boolean).join(" ");
+  addLog(`⚔️ ${tags ? `[${tags}] ` : ""}정답(${state.currentWord.w})! ${dmg} 데미지!${guardMsg}${stunMsg}${bonusGoldMsg}`);
+
+  saveProgress();
   updateBattleBars();
 
   if (state.monsterHp <= 0) {
@@ -727,17 +930,21 @@ function handleWrongAnswer(reason) {
   if (!state.wrongNotes.some(w => w.w === state.currentWord.w)) {
     state.wrongNotes.push(state.currentWord);
   }
+  if (!state.cursedWords.includes(state.currentWord.w)) {
+    state.cursedWords.push(state.currentWord.w);
+  }
 
   document.getElementById("quiz-box").style.display = "none";
   document.getElementById("controls").style.display = "block";
   state.monsterRage = Math.min(100, state.monsterRage + 30);
-  addLog(`❌ ${reason} (적의 분노가 크게 상승합니다!)`);
+  addLog(`❌ ${reason} (이 단어는 다음 복수전에 등장합니다!)`);
+  saveProgress();
   updateBattleBars();
   setTimeout(monsterTurn, 500);
 }
 
 // ==========================================
-// 👾 몬스터 턴 (예고된 의도 + 8종 고유 스킬 실행)
+// 👾 몬스터 턴 실행
 // ==========================================
 function monsterTurn() {
   if (state.monsterHp <= 0) return;
@@ -755,13 +962,11 @@ function monsterTurn() {
   let dmg = state.monsterAtk;
   let logText = "";
 
-  // 오크 패시브: 체력이 낮을수록 공격력 상승
   if (mon.art === "orc" && state.monsterHp < state.monsterMaxHp * 0.5) {
     dmg = Math.round(dmg * 1.35);
   }
 
   if (state.monsterIntent === "guard") {
-    // 방어 태세 턴에는 공격 대신 소량 회복하거나 분노 충전
     state.monsterRage = Math.min(100, state.monsterRage + 25);
     if (mon.art === "slime") {
       const heal = 22;
@@ -808,12 +1013,14 @@ function monsterTurn() {
     logText = `👾 [${mon.name}]의 공격!`;
   }
 
-  // 방어력 및 성기사 패시브(-4) 적용
   dmg -= tierObj.defBonus;
   if (state.job === "paladin") dmg -= 4;
+  if (hasRelic("iron_heart")) dmg -= 3;
   dmg = Math.max(3, dmg);
 
   state.hp = Math.max(0, state.hp - dmg);
+  playSfx("hurt");
+  triggerHitEffect("hero-art-box", `-${dmg}`, "#ff1744");
   addLog(`${logText} 영웅이 ${dmg}의 피해를 입었습니다.`);
 
   if (state.hp <= 0) {
@@ -826,8 +1033,13 @@ function monsterTurn() {
   updateBattleBars();
 }
 
+// ==========================================
+// 🏆 전투 승리 & 로그라이크 유물 3지선다 선택
+// ==========================================
 function winBattle() {
-  const goldReward = 45 + state.stage * 12;
+  playSfx("win");
+  const relicGold = hasRelic("gold_pouch") ? 30 : 0;
+  const goldReward = 45 + state.stage * 12 + relicGold;
   const expReward = 60;
   state.gold += goldReward;
   state.exp += expReward;
@@ -842,6 +1054,7 @@ function winBattle() {
 
   addLog(`🏆 승리! +${goldReward}G, +${expReward} EXP 획득!${lvMsg}`);
   state.stage++;
+  saveProgress();
   updateBattleBars();
 
   showResultPanel(true);
@@ -849,6 +1062,7 @@ function winBattle() {
 
 function loseBattle() {
   addLog(`💀 영웅이 쓰러졌습니다... 대장간에서 무기를 강화하거나 아바타를 진화시켜 보세요!`);
+  saveProgress();
   showResultPanel(false);
 }
 
@@ -861,16 +1075,51 @@ function showResultPanel(isWin) {
   resultPanel.style.display = "block";
   restartBtn.textContent = isWin ? `🚀 STAGE ${state.stage} 도전!` : `🔄 현재 스테이지 재도전`;
 
+  let html = "";
+
+  // 승리 시 보유하지 않은 유물 3개 중 1개 선택 UI 표시
+  if (isWin) {
+    const available = relicPool.filter(r => !hasRelic(r.id)).sort(() => Math.random() - 0.5).slice(0, 3);
+    if (available.length > 0) {
+      html += `
+        <div id="relic-choice-box" style="margin-bottom:14px; padding:12px; background:rgba(255,213,79,0.1); border:1px solid #ffd54f; border-radius:12px;">
+          <h4 style="margin:0 0 8px 0; color:#ffd54f;">🏺 승리 보상: 고대 유물 1개를 선택하세요!</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px;">
+            ${available.map(r => `
+              <button onclick="pickRelic('${r.id}')" style="padding:10px; background:#1e293b; border:1px solid #64748b; border-radius:10px; color:#fff; cursor:pointer; text-align:left;">
+                <div style="font-size:18px;">${r.icon} <strong>${r.name}</strong></div>
+                <div style="font-size:12px; color:#cbd5e1; margin-top:4px;">${r.desc}</div>
+              </button>
+            `).join("")}
+          </div>
+        </div>`;
+    }
+  }
+
   if (state.wrongNotes.length > 0) {
-    notesBox.innerHTML = `<h4>📝 이번 전투 오답 노트</h4>` +
+    html += `<h4>📝 이번 전투 오답 노트 (다음 판 복수전 등장!)</h4>` +
       state.wrongNotes.map(item => `<div>• <strong>${item.w}</strong> : ${item.m}</div>`).join("");
   } else {
-    notesBox.innerHTML = `<h4>✨ 퍼펙트! 틀린 단어가 하나도 없습니다!</h4>`;
+    html += `<h4>✨ 퍼펙트! 틀린 단어가 하나도 없습니다!</h4>`;
+  }
+
+  notesBox.innerHTML = html;
+}
+
+function pickRelic(id) {
+  if (!hasRelic(id)) {
+    state.relics.push(id);
+    saveProgress();
+  }
+  const r = relicPool.find(item => item.id === id);
+  const box = document.getElementById("relic-choice-box");
+  if (box && r) {
+    box.innerHTML = `<div style="color:#4ecca3; font-weight:bold;">✅ [${r.icon} ${r.name}] 유물을 획득했습니다! (${r.desc})</div>`;
   }
 }
 
 // ==========================================
-// 🔊 TTS 발음, 🔍 힌트, 🎒 퀵 아이템
+// 🔊 TTS 발음, 🔍 50:50 및 철자 힌트, 🎒 퀵 아이템
 // ==========================================
 function speakCurrentWord() {
   if (!state.currentWord || !("speechSynthesis" in window)) return;
@@ -883,17 +1132,38 @@ function speakCurrentWord() {
 
 function useHintMagnifier() {
   if (!state.currentWord) return;
-  if (state.gold < 20) {
-    alert("골드가 부족합니다! (20G 필요)");
+  const hintCost = hasRelic("sage_glasses") ? 10 : 20;
+  if (state.gold < hintCost) {
+    alert(`골드가 부족합니다! (${hintCost}G 필요)`);
     return;
   }
-  state.gold -= 20;
+  state.gold -= hintCost;
+  saveProgress();
   updateBattleBars();
 
   const btn = document.getElementById("hint-btn");
   btn.disabled = true;
   const w = state.currentWord.w;
-  btn.textContent = `💡 첫 글자: '${w[0].toUpperCase()}' (${w.length}글자)`;
+
+  if (state.currentSkill === "thunder") {
+    const masked = w
+      .split("")
+      .map((ch, idx) => (idx === 0 || idx === w.length - 1 || idx % 2 === 0 ? ch : "_"))
+      .join(" ");
+    btn.textContent = `💡 철자 힌트: ${masked}`;
+  } else {
+    const optionBtns = Array.from(document.querySelectorAll("#quiz-options .option-btn"));
+    const wrongBtns = optionBtns.filter(b => b.textContent.trim() !== state.currentWord.m);
+    wrongBtns
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2)
+      .forEach(b => {
+        b.disabled = true;
+        b.style.opacity = "0.25";
+        b.style.textDecoration = "line-through";
+      });
+    btn.textContent = `💡 오답 2개 제거 완료!`;
+  }
 }
 
 function buyAndUseItem(type) {
@@ -901,6 +1171,8 @@ function buyAndUseItem(type) {
     if (state.gold < 30) return alert("골드가 부족합니다! (30G 필요)");
     state.gold -= 30;
     state.hp = Math.min(state.maxHp, state.hp + 50);
+    playSfx("heal");
+    triggerHitEffect("hero-art-box", "+50 HP", "#4ecca3");
     addLog("🧪 체력물약 사용! HP +50 즉시 회복!");
   } else if (type === "double") {
     if (state.gold < 40) return alert("골드가 부족합니다! (40G 필요)");
@@ -909,6 +1181,7 @@ function buyAndUseItem(type) {
     state.doubleDmg = true;
     addLog("📜 더블데미지 주문서 발동! 다음 공격 피해량이 2배가 됩니다!");
   }
+  saveProgress();
   updateBattleBars();
 }
 
@@ -944,6 +1217,8 @@ function upgradeWeapon() {
   }
   state.gold -= cost;
   state.weaponLv++;
+  playSfx("win");
+  saveProgress();
   updateLobbyUI();
   updateBattleBars();
   openForgeModal();
@@ -990,6 +1265,8 @@ function upgradeAvatar() {
   }
   state.gold -= cur.cost;
   state.avatarTier++;
+  playSfx("win");
+  saveProgress();
   updateLobbyUI();
   updateBattleBars();
   openAvatarModal();
