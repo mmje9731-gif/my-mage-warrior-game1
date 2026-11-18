@@ -1,77 +1,85 @@
-// 🎨 영웅 아바타(티어별 외형 진화) & 8종 몬스터 SVG 일러스트 생성기
+// 🎨 영웅 일러스트 & 아바타 티어별 진화 + 무기 강화 이펙트 렌더러
 function getHeroSvg(job, avatarTier) {
-  const aura = avatarTier >= 3 ? `<circle cx="60" cy="60" r="54" fill="none" stroke="#ffd54f" stroke-width="3" stroke-dasharray="6 4"/>` : "";
-  const wings = avatarTier >= 4 ? `
-    <path d="M25 62 Q4 35 12 72 Q22 70 30 78 Z" fill="#fff9c4" stroke="#ffd54f" stroke-width="2"/>
-    <path d="M95 62 Q116 35 108 72 Q98 70 90 78 Z" fill="#fff9c4" stroke="#ffd54f" stroke-width="2"/>` : "";
-  const crown = avatarTier >= 2 ? `<polygon points="48,14 52,4 60,11 68,4 72,14" fill="#ffd54f" stroke="#ff8f00" stroke-width="1.5"/>` : "";
+  const wLv = typeof state !== "undefined" ? state.weaponLv : 0;
 
-  if (job === "archer") {
-    const cloakColor = avatarTier >= 3 ? "#00695c" : (avatarTier === 2 ? "#2e7d32" : "#1b5e20");
-    const trimColor = avatarTier >= 2 ? "#ffd54f" : "#5d4037";
-    return `
-      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-        ${aura}${wings}
-        <path d="M35 55 L20 105 L100 105 L85 55 Z" fill="${cloakColor}"/>
-        <rect x="44" y="55" width="32" height="40" rx="8" fill="#388e3c" stroke="${trimColor}" stroke-width="2"/>
-        <rect x="44" y="75" width="32" height="7" fill="${trimColor}"/>
-        <circle cx="60" cy="40" r="18" fill="#ffe0b2"/>
-        <path d="M40 38 Q42 18 60 18 Q78 18 80 38 Q72 28 60 30 Q48 28 40 38 Z" fill="#fbc02d"/>
-        <path d="M38 34 L60 12 L82 34 Z" fill="#2e7d32"/>
-        ${crown}
-        <circle cx="53" cy="41" r="2.5" fill="#1a1a2e"/>
-        <circle cx="67" cy="41" r="2.5" fill="#1a1a2e"/>
-        <path d="M88 18 Q115 60 88 102" stroke="${avatarTier >= 3 ? '#ffd54f' : '#8d6e63'}" stroke-width="5" fill="none" stroke-linecap="round"/>
-        <line x1="88" y1="18" x2="88" y2="102" stroke="#e0e0e0" stroke-width="1.5"/>
-        <line x1="65" y1="60" x2="112" y2="60" stroke="#ffd54f" stroke-width="3"/>
-        <polygon points="116,60 106,55 106,65" fill="#4ecca3"/>
-      </svg>`;
-  } else if (job === "mage") {
-    const robeColor = avatarTier >= 3 ? "#4a148c" : (avatarTier === 2 ? "#311b92" : "#283593");
-    return `
-      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-        ${aura}${wings}
-        <path d="M38 55 L25 105 L95 105 L82 55 Z" fill="${robeColor}"/>
-        <path d="M52 55 L60 105 L68 55 Z" fill="${avatarTier >= 2 ? '#ffd54f' : '#7e57c2'}"/>
-        <circle cx="60" cy="42" r="17" fill="#ffe0b2"/>
-        <path d="M30 34 L90 34 L60 6 Z" fill="#5e35b1"/>
-        <ellipse cx="60" cy="34" rx="34" ry="6" fill="#7e57c2"/>
-        ${crown}
-        <circle cx="54" cy="43" r="2.5" fill="#1a1a2e"/>
-        <circle cx="66" cy="43" r="2.5" fill="#1a1a2e"/>
-        <line x1="94" y1="25" x2="94" y2="105" stroke="${avatarTier >= 3 ? '#ffd54f' : '#8d6e63'}" stroke-width="5" stroke-linecap="round"/>
-        <circle cx="94" cy="22" r="10" fill="${avatarTier >= 3 ? '#ff4081' : '#00e5ff'}"/>
-        <circle cx="94" cy="22" r="4" fill="#ffffff"/>
-      </svg>`;
-  } else {
-    const armorColor = avatarTier >= 3 ? "#ffd54f" : (avatarTier === 2 ? "#b0bec5" : "#78909c");
-    return `
-      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-        ${aura}${wings}
-        <rect x="40" y="54" width="40" height="46" rx="8" fill="${armorColor}"/>
-        <path d="M40 54 L60 72 L80 54" fill="#eceff1"/>
-        <circle cx="60" cy="38" r="18" fill="#ffe0b2"/>
-        <path d="M40 36 Q40 14 60 14 Q80 14 80 36 L75 30 L60 34 L45 30 Z" fill="${armorColor}"/>
-        ${crown}
-        <circle cx="53" cy="40" r="2.5" fill="#1a1a2e"/>
-        <circle cx="67" cy="40" r="2.5" fill="#1a1a2e"/>
-        <path d="M18 55 L42 55 L42 82 Q30 98 18 82 Z" fill="#1565c0" stroke="#ffd54f" stroke-width="3"/>
-        <rect x="90" y="25" width="7" height="55" fill="#e0f7fa"/>
-        <rect x="82" y="78" width="23" height="6" fill="#ffd54f"/>
-      </svg>`;
+  // 1~2티어는 기본 일러스트, 3~4티어는 각성 일러스트로 자동 진화!
+  const heroImages = {
+    archer: {
+      base: "archer.png",
+      awakened: "archer_awakened.png"
+    },
+    mage: {
+      base: "mage.png",
+      awakened: "mage_awakened.png"
+    },
+    paladin: {
+      base: "paladin.png",
+      awakened: "paladin.awakened.png" // 업로드된 실제 파일명 반영
+    }
+  };
+
+  const isAwakened = avatarTier >= 3;
+  const imgFile = isAwakened ? heroImages[job].awakened : heroImages[job].base;
+
+  // 티어 및 무기 강화에 따른 테두리 & 후광 이펙트
+  let frameStyle = "border: 2px solid rgba(255, 255, 255, 0.25);";
+  if (avatarTier === 2) {
+    frameStyle = "border: 3px solid #ffd54f; box-shadow: 0 0 14px rgba(255, 213, 79, 0.75);";
+  } else if (avatarTier === 3) {
+    frameStyle = "border: 3px solid #ff9100; box-shadow: 0 0 20px rgba(255, 145, 0, 0.9);";
+  } else if (avatarTier >= 4) {
+    frameStyle = "border: 3px solid #00e5ff; box-shadow: 0 0 26px rgba(0, 229, 255, 1), inset 0 0 12px rgba(255, 215, 0, 0.6);";
   }
+
+  // 무기 +5강 이상일 경우 신화 무기 불꽃 광채 추가
+  if (wLv >= 5) {
+    frameStyle += " outline: 2px solid #ff5252; outline-offset: 2px;";
+  }
+
+  // 티어 뱃지 & 무기 강화 뱃지 오버레이
+  const tierBadge = avatarTier >= 2
+    ? `<span style="position:absolute; top:5px; left:5px; background:linear-gradient(135deg,#ffd54f,#ff8f00); color:#1a1a2e; font-size:10px; font-weight:900; padding:2px 6px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.6);">
+        ${avatarTier === 4 ? "👑 MAX 각성" : avatarTier === 3 ? "🪽 각성" : "👑 왕관"}
+       </span>`
+    : "";
+
+  const weaponBadge = wLv > 0
+    ? `<span style="position:absolute; bottom:5px; right:5px; background:rgba(15,23,42,0.85); color:${wLv >= 5 ? "#ff8a80" : "#ffd54f"}; border:1px solid ${wLv >= 5 ? "#ff5252" : "#ffd54f"}; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:6px;">
+        ⚔️ +${wLv}
+       </span>`
+    : "";
+
+  return `
+    <div style="position:relative; width:100%; height:100%; border-radius:14px; overflow:hidden; ${frameStyle}">
+      <img src="./${imgFile}" alt="${job}" style="width:100%; height:100%; object-fit:cover; display:block;">
+      ${tierBadge}
+      ${weaponBadge}
+    </div>`;
 }
 
-const monsterSvg = {
-  slime: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M20 92 Q15 42 60 36 Q105 42 100 92 Q80 104 60 104 Q40 104 20 92 Z" fill="#00e676"/><path d="M32 52 Q42 42 55 44" stroke="#b9f6ca" stroke-width="5" stroke-linecap="round" fill="none"/><polygon points="42,36 46,18 54,28 60,15 66,28 74,18 78,36" fill="#ffd54f" stroke="#ff8f00" stroke-width="2"/><circle cx="46" cy="66" r="6" fill="#1a1a2e"/><circle cx="74" cy="66" r="6" fill="#1a1a2e"/><path d="M50 80 Q60 90 70 80" stroke="#1a1a2e" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
-  bat: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M38 58 Q10 30 6 65 Q22 65 26 78 Q34 70 40 75 Z" fill="#6a1b9a"/><path d="M82 58 Q110 30 114 65 Q98 65 94 78 Q86 70 80 75 Z" fill="#6a1b9a"/><circle cx="60" cy="64" r="24" fill="#4a148c"/><polygon points="42,46 38,24 54,42" fill="#4a148c"/><polygon points="78,46 82,24 66,42" fill="#4a148c"/><circle cx="51" cy="60" r="5" fill="#ffea00"/><circle cx="69" cy="60" r="5" fill="#ffea00"/><polygon points="52,72 55,81 58,72" fill="#ffffff"/><polygon points="62,72 65,81 68,72" fill="#ffffff"/></svg>`,
-  orc: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect x="30" y="58" width="60" height="46" rx="12" fill="#558b2f"/><path d="M35 62 L85 95 M85 62 L35 95" stroke="#4e342e" stroke-width="8"/><rect x="38" y="24" width="44" height="38" rx="10" fill="#689f38"/><polygon points="38,32 24,18 42,24" fill="#eceff1"/><polygon points="82,32 96,18 78,24" fill="#eceff1"/><circle cx="50" cy="38" r="4" fill="#ff1744"/><circle cx="70" cy="38" r="4" fill="#ff1744"/><path d="M95 95 L108 30 L116 32 L102 97 Z" fill="#6d4c41"/></svg>`,
-  ghost: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M32 95 Q32 35 60 35 Q88 35 88 95 L78 86 L69 96 L60 86 L51 96 L42 86 Z" fill="#b2ebf2" opacity="0.9"/><path d="M26 38 L94 38 L78 16 L42 16 Z" fill="#263238"/><rect x="42" y="33" width="36" height="5" fill="#ffd54f"/><circle cx="50" cy="58" r="6" fill="#1a1a2e"/><line x1="63" y1="53" x2="77" y2="63" stroke="#ff5252" stroke-width="3"/><ellipse cx="60" cy="74" rx="7" ry="9" fill="#1a1a2e"/></svg>`,
-  golem: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><polygon points="35,45 85,45 98,98 22,98" fill="#4fc3f7" stroke="#0288d1" stroke-width="3"/><polygon points="42,18 78,18 85,45 35,45" fill="#81d4fa" stroke="#0288d1" stroke-width="3"/><rect x="46" y="28" width="10" height="5" fill="#ffea00"/><rect x="64" y="28" width="10" height="5" fill="#ffea00"/><path d="M48 65 L60 75 L72 65" stroke="#01579b" stroke-width="4" fill="none"/></svg>`,
-  darkmage: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M34 55 L20 105 L100 105 L86 55 Z" fill="#212121"/><path d="M48 55 L60 105 L72 55 Z" fill="#b71c1c"/><circle cx="60" cy="42" r="16" fill="#37474f"/><path d="M26 35 L94 35 L60 6 Z" fill="#1a1a2e" stroke="#ff5252" stroke-width="2"/><circle cx="53" cy="42" r="3.5" fill="#ff1744"/><circle cx="67" cy="42" r="3.5" fill="#ff1744"/><line x1="24" y1="22" x2="24" y2="105" stroke="#4e342e" stroke-width="5"/><circle cx="24" cy="20" r="9" fill="#d500f9"/></svg>`,
-  werewolf: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect x="34" y="56" width="52" height="48" rx="14" fill="#5d4037"/><polygon points="36,38 30,14 50,30" fill="#4e342e"/><polygon points="84,38 90,14 70,30" fill="#4e342e"/><circle cx="60" cy="42" r="20" fill="#6d4c41"/><circle cx="50" cy="35" r="3.5" fill="#ffea00"/><circle cx="70" cy="35" r="3.5" fill="#ffea00"/><path d="M50 53 L54 58 L58 53 L62 58 L66 53 L70 58" stroke="#ffffff" stroke-width="2" fill="none"/></svg>`,
-  dragon: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M35 55 L8 25 L25 68 Z" fill="#b71c1c"/><path d="M85 55 L112 25 L95 68 Z" fill="#b71c1c"/><path d="M38 52 L28 104 L92 104 L82 52 Z" fill="#d32f2f"/><path d="M48 60 L44 104 L76 104 L72 60 Z" fill="#ffb300"/><rect x="40" y="22" width="40" height="34" rx="10" fill="#e53935"/><polygon points="42,24 30,6 50,22" fill="#ffd54f"/><polygon points="78,24 90,6 70,22" fill="#ffd54f"/><circle cx="50" cy="36" r="4" fill="#ffea00"/><circle cx="70" cy="36" r="4" fill="#ffea00"/></svg>`
+// 👾 8종 몬스터 고화질 일러스트 매핑 (업로드된 실제 파일명 반영)
+const monsterImages = {
+  slime: "slime.png",
+  bat: "bat.png",
+  orc: "orc.png",
+  ghost: "ghost.png",
+  golem: "gelem.png",
+  darkmage: "darkmage.png",
+  werewolf: "wearwof.png",
+  dragon: "dragon.png"
 };
+
+function getMonsterHtml(artKey, isBoss) {
+  const file = monsterImages[artKey] || "slime.png";
+  const bossStyle = isBoss
+    ? "border: 3px solid #ff1744; box-shadow: 0 0 22px rgba(255, 23, 68, 0.85);"
+    : "border: 2px solid rgba(255, 82, 82, 0.4); box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);";
+
+  return `
+    <div style="position:relative; width:100%; height:100%; border-radius:14px; overflow:hidden; ${bossStyle}">
+      <img src="./${file}" alt="${artKey}" style="width:100%; height:100%; object-fit:cover; display:block;">
+    </div>`;
+}
 
 const monsterRoster = [
   { art: "slime", name: "슬라임 킹", baseHp: 110, baseAtk: 11 },
@@ -229,16 +237,23 @@ const lessonsList = [
 // ⚔️ 게임 상태 & 직업/장비 설정 데이터
 // ==========================================
 const jobMeta = {
-  archer: { title: "바람의 궁수", icon: "🏹", weapon: "참나무 활", baseHp: 100, baseAtk: 22 },
-  mage: { title: "영어 마법사", icon: "🪄", weapon: "견습생 지팡이", baseHp: 90, baseAtk: 25 },
-  paladin: { title: "빛의 성기사", icon: "⚔️", weapon: "수련용 대검", baseHp: 120, baseAtk: 20 }
+  archer: { title: "바람의 궁수", icon: "🏹", weapons: ["참나무 활", "정령의 장궁", "천공의 황금활"], baseHp: 100, baseAtk: 22 },
+  mage: { title: "영어 마법사", icon: "🪄", weapons: ["견습생 지팡이", "아크메이지 스태프", "별빛 현자의 지팡이"], baseHp: 90, baseAtk: 25 },
+  paladin: { title: "빛의 성기사", icon: "⚔️", weapons: ["수련용 대검", "기사의 성검", "태양신 엑스칼리버"], baseHp: 120, baseAtk: 20 }
 };
+
+function getWeaponName(job, wLv) {
+  const list = jobMeta[job].weapons;
+  if (wLv >= 5) return list[2];
+  if (wLv >= 2) return list[1];
+  return list[0];
+}
 
 const avatarTiers = [
   { tier: 1, name: "Tier 1 · 초보 모험가 복장", desc: "기본 모험가 의상입니다.", hpBonus: 0, defBonus: 0, cost: 60 },
-  { tier: 2, name: "Tier 2 · 황금 왕관 예복", desc: "빛나는 왕관과 황금 장식이 추가됩니다.", hpBonus: 25, defBonus: 2, cost: 120 },
-  { tier: 3, name: "Tier 3 · 영웅의 수호 갑주", desc: "황금 오라가 감도는 상급 전사의 의상입니다.", hpBonus: 60, defBonus: 5, cost: 200 },
-  { tier: 4, name: "Tier 4 · 천사의 날개 성의", desc: "순백의 날개가 펼쳐지는 전설의 의상입니다.", hpBonus: 110, defBonus: 9, cost: 0 }
+  { tier: 2, name: "Tier 2 · 황금 왕관 예복", desc: "황금 왕관 뱃지와 황금빛 오라 테두리가 적용됩니다.", hpBonus: 25, defBonus: 2, cost: 120 },
+  { tier: 3, name: "Tier 3 · 각성 영웅의 갑주", desc: "각성 일러스트로 진화하며 영웅의 날개가 펼쳐집니다!", hpBonus: 60, defBonus: 5, cost: 200 },
+  { tier: 4, name: "Tier 4 · 천사의 날개 성의", desc: "전설의 청색 신성 오라와 최고 등급 능력치가 부여됩니다!", hpBonus: 110, defBonus: 9, cost: 0 }
 ];
 
 let state = {
@@ -330,6 +345,7 @@ function updateLobbyUI() {
   const meta = jobMeta[state.job];
   const tierObj = avatarTiers[state.avatarTier - 1];
   const atkBonus = state.weaponLv * 5;
+  const wName = getWeaponName(state.job, state.weaponLv);
 
   document.getElementById("hud-stage").textContent = `STAGE ${state.stage}`;
   document.getElementById("hud-gold").textContent = state.gold;
@@ -339,7 +355,7 @@ function updateLobbyUI() {
   document.getElementById("menu-hero-lv").textContent = state.lv;
   document.getElementById("menu-avatar-tier").textContent = tierObj.name.split(" · ")[1];
   document.getElementById("menu-hero-title").textContent = meta.title;
-  document.getElementById("menu-weapon-info").textContent = `${meta.icon} ${meta.weapon} (+${state.weaponLv}) · 공격력 +${atkBonus}`;
+  document.getElementById("menu-weapon-info").textContent = `${meta.icon} ${wName} (+${state.weaponLv}) · 공격력 +${atkBonus}`;
 }
 
 // ==========================================
@@ -361,8 +377,11 @@ function startGame() {
   state.doubleDmg = false;
   state.wrongNotes = [];
 
-  const mon = monsterRoster[(state.stage - 1) % monsterRoster.length];
+  const monIdx = (state.stage - 1) % monsterRoster.length;
+  const mon = monsterRoster[monIdx];
+  const isBoss = mon.art === "dragon" || state.stage % 4 === 0;
   const loopScale = 1 + Math.floor((state.stage - 1) / monsterRoster.length) * 0.35;
+
   state.monsterMaxHp = Math.round(mon.baseHp * loopScale);
   state.monsterHp = state.monsterMaxHp;
   state.monsterAtk = Math.round(mon.baseAtk * loopScale);
@@ -378,7 +397,7 @@ function startGame() {
   const lessonName = state.lesson === "ALL" ? "전체 단원" : state.lesson;
   document.getElementById("current-scope-badge").textContent = `${state.grade} | ${state.pub} | ${lessonName}`;
   document.getElementById("hero-art-box").innerHTML = getHeroSvg(state.job, state.avatarTier);
-  document.getElementById("monster-art-box").innerHTML = monsterSvg[mon.art];
+  document.getElementById("monster-art-box").innerHTML = getMonsterHtml(mon.art, isBoss);
   document.getElementById("monster-name").textContent = `STAGE ${state.stage} · ${mon.name}`;
   document.getElementById("monster-speech").textContent = "덤벼라, 꼬마 영웅!";
 
@@ -395,13 +414,15 @@ function backToMenu() {
 
 function updateBattleBars() {
   const meta = jobMeta[state.job];
+  const wName = getWeaponName(state.job, state.weaponLv);
+
   document.getElementById("hud-stage").textContent = `STAGE ${state.stage}`;
   document.getElementById("hud-gold").textContent = state.gold;
   document.getElementById("hud-dex").textContent = state.dex.size;
 
   document.getElementById("hero-lv-text").textContent = state.lv;
   document.getElementById("hero-title").textContent = meta.title;
-  document.getElementById("weapon-tag").textContent = `${meta.icon} ${meta.weapon} (+${state.weaponLv})`;
+  document.getElementById("weapon-tag").textContent = `${meta.icon} ${wName} (+${state.weaponLv})`;
 
   document.getElementById("mage-hp-text").textContent = state.hp;
   document.getElementById("mage-maxhp-text").textContent = state.maxHp;
@@ -438,7 +459,6 @@ function updateBattleBars() {
     feverBadge.style.display = "none";
   }
 
-  // 펫 진화 표시
   const petIcon = document.getElementById("pet-icon");
   const petName = document.getElementById("pet-name");
   const petLv = document.getElementById("pet-lv");
@@ -584,18 +604,16 @@ function handleCorrectAnswer() {
     return;
   }
 
-  // 공격력 계산
   const meta = jobMeta[state.job];
   let dmg = meta.baseAtk + state.weaponLv * 5 + (state.lv - 1) * 4;
   if (state.currentSkill === "thunder") dmg = Math.round(dmg * 1.6);
-  if (state.job === "mage") dmg += 5; // 마법사 패시브
-  if (state.combo >= 3) dmg = Math.round(dmg * 1.5); // 피버 보너스
+  if (state.job === "mage") dmg += 5;
+  if (state.combo >= 3) dmg = Math.round(dmg * 1.5);
   if (state.doubleDmg) {
     dmg *= 2;
     state.doubleDmg = false;
   }
 
-  // 치명타 판정 (궁수는 확률 2배)
   const critChance = state.job === "archer" ? 0.45 : 0.22;
   const isCrit = Math.random() < critChance;
   if (isCrit) dmg = Math.round(dmg * 1.5);
@@ -640,7 +658,6 @@ function monsterTurn() {
     document.getElementById("monster-speech").textContent = "크아앙! 받아라 필살기!";
   }
 
-  // 방어력 및 성기사 패시브(-4) 적용
   dmg -= tierObj.defBonus;
   if (state.job === "paladin") dmg -= 4;
   dmg = Math.max(2, dmg);
@@ -748,9 +765,10 @@ function openForgeModal() {
   const cost = 40 + state.weaponLv * 30;
   const grades = ["일반 무기", "고급 무기", "희귀 무기", "영웅 무기", "전설 무기", "신화 무기"];
   const gradeName = grades[Math.min(grades.length - 1, Math.floor(state.weaponLv / 2))];
+  const wName = getWeaponName(state.job, state.weaponLv);
 
   document.getElementById("forge-weapon-icon").textContent = meta.icon;
-  document.getElementById("forge-weapon-name").textContent = `${meta.weapon} (+${state.weaponLv})`;
+  document.getElementById("forge-weapon-name").textContent = `${wName} (+${state.weaponLv})`;
   document.getElementById("forge-weapon-grade").textContent = `등급: ${gradeName}`;
   document.getElementById("forge-cur-atk").textContent = state.weaponLv * 5;
   document.getElementById("forge-next-atk").textContent = (state.weaponLv + 1) * 5;
