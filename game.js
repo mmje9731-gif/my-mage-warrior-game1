@@ -2,7 +2,6 @@
 function getHeroSvg(job, avatarTier) {
   const wLv = typeof state !== "undefined" ? state.weaponLv : 0;
 
-  // 1~2티어는 기본 일러스트, 3~4티어는 각성 일러스트로 자동 진화!
   const heroImages = {
     archer: {
       base: "archer.png",
@@ -14,14 +13,13 @@ function getHeroSvg(job, avatarTier) {
     },
     paladin: {
       base: "paladin.png",
-      awakened: "paladin.awakened.png" // 업로드된 실제 파일명 반영
+      awakened: "paladin.awakened.png"
     }
   };
 
   const isAwakened = avatarTier >= 3;
   const imgFile = isAwakened ? heroImages[job].awakened : heroImages[job].base;
 
-  // 티어 및 무기 강화에 따른 테두리 & 후광 이펙트
   let frameStyle = "border: 2px solid rgba(255, 255, 255, 0.25);";
   if (avatarTier === 2) {
     frameStyle = "border: 3px solid #ffd54f; box-shadow: 0 0 14px rgba(255, 213, 79, 0.75);";
@@ -31,12 +29,10 @@ function getHeroSvg(job, avatarTier) {
     frameStyle = "border: 3px solid #00e5ff; box-shadow: 0 0 26px rgba(0, 229, 255, 1), inset 0 0 12px rgba(255, 215, 0, 0.6);";
   }
 
-  // 무기 +5강 이상일 경우 신화 무기 불꽃 광채 추가
   if (wLv >= 5) {
     frameStyle += " outline: 2px solid #ff5252; outline-offset: 2px;";
   }
 
-  // 티어 뱃지 & 무기 강화 뱃지 오버레이
   const tierBadge = avatarTier >= 2
     ? `<span style="position:absolute; top:5px; left:5px; background:linear-gradient(135deg,#ffd54f,#ff8f00); color:#1a1a2e; font-size:10px; font-weight:900; padding:2px 6px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.6);">
         ${avatarTier === 4 ? "👑 MAX 각성" : avatarTier === 3 ? "🪽 각성" : "👑 왕관"}
@@ -57,7 +53,7 @@ function getHeroSvg(job, avatarTier) {
     </div>`;
 }
 
-// 👾 8종 몬스터 고화질 일러스트 매핑 (업로드된 실제 파일명 반영)
+// 👾 8종 몬스터 고화질 일러스트 매핑
 const monsterImages = {
   slime: "slime.png",
   bat: "bat.png",
@@ -69,27 +65,40 @@ const monsterImages = {
   dragon: "dragon.png"
 };
 
-function getMonsterHtml(artKey, isBoss) {
+function getMonsterHtml(artKey, isBoss, intentType) {
   const file = monsterImages[artKey] || "slime.png";
-  const bossStyle = isBoss
+  let borderStyle = isBoss
     ? "border: 3px solid #ff1744; box-shadow: 0 0 22px rgba(255, 23, 68, 0.85);"
-    : "border: 2px solid rgba(255, 82, 82, 0.4); box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);";
+    : "border: 2px solid rgba(255, 82, 82, 0.45); box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);";
+
+  if (intentType === "guard") {
+    borderStyle = "border: 3px solid #40c4ff; box-shadow: 0 0 20px rgba(64, 196, 255, 0.9);";
+  } else if (intentType === "charge") {
+    borderStyle = "border: 3px solid #ff9100; box-shadow: 0 0 24px rgba(255, 145, 0, 1);";
+  }
+
+  const statusTag = intentType === "guard"
+    ? `<span style="position:absolute; top:5px; right:5px; background:#0277bd; color:#fff; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:6px;">🛡️ 방어태세</span>`
+    : intentType === "charge"
+      ? `<span style="position:absolute; top:5px; right:5px; background:#d50000; color:#fff; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:6px;">🔥 필살준비</span>`
+      : "";
 
   return `
-    <div style="position:relative; width:100%; height:100%; border-radius:14px; overflow:hidden; ${bossStyle}">
+    <div style="position:relative; width:100%; height:100%; border-radius:14px; overflow:hidden; ${borderStyle}">
       <img src="./${file}" alt="${artKey}" style="width:100%; height:100%; object-fit:cover; display:block;">
+      ${statusTag}
     </div>`;
 }
 
 const monsterRoster = [
-  { art: "slime", name: "슬라임 킹", baseHp: 110, baseAtk: 11 },
-  { art: "bat", name: "어둠의 박쥐왕", baseHp: 125, baseAtk: 13 },
-  { art: "orc", name: "숲속의 오크", baseHp: 140, baseAtk: 15 },
-  { art: "ghost", name: "유령 해적선장", baseHp: 155, baseAtk: 16 },
-  { art: "golem", name: "얼음 골렘", baseHp: 175, baseAtk: 18 },
-  { art: "darkmage", name: "어둠의 흑마법사", baseHp: 195, baseAtk: 20 },
-  { art: "werewolf", name: "황금 늑대인간", baseHp: 215, baseAtk: 22 },
-  { art: "dragon", name: "레드 드래곤", baseHp: 240, baseAtk: 25 }
+  { art: "slime", name: "슬라임 킹", baseHp: 135, baseAtk: 14, trait: "체력 50% 이하 시 자가 재생(+20 HP)" },
+  { art: "bat", name: "어둠의 박쥐왕", baseHp: 155, baseAtk: 16, trait: "공격 시 피해량의 50% 흡혈" },
+  { art: "orc", name: "숲속의 오크", baseHp: 180, baseAtk: 19, trait: "체력이 낮을수록 공격력 대폭 상승" },
+  { art: "ghost", name: "유령 해적선장", baseHp: 200, baseAtk: 21, trait: "공격 시 영웅 MP 10 강탈" },
+  { art: "golem", name: "얼음 골렘", baseHp: 235, baseAtk: 23, trait: "빙결 오라: 퀴즈 제한시간 8초로 단축" },
+  { art: "darkmage", name: "어둠의 흑마법사", baseHp: 260, baseAtk: 26, trait: "암흑 저주: 방어막과 마나 흡수를 병행" },
+  { art: "werewolf", name: "황금 늑대인간", baseHp: 295, baseAtk: 29, trait: "광란의 발톱: 높은 확률로 2연속 공격" },
+  { art: "dragon", name: "레드 드래곤", baseHp: 350, baseAtk: 34, trait: "용의 위압감: 브레스 차징 & 화상 피해" }
 ];
 
 // 📚 2022 개정 초등 영어 어휘 사전
@@ -237,9 +246,9 @@ const lessonsList = [
 // ⚔️ 게임 상태 & 직업/장비 설정 데이터
 // ==========================================
 const jobMeta = {
-  archer: { title: "바람의 궁수", icon: "🏹", weapons: ["참나무 활", "정령의 장궁", "천공의 황금활"], baseHp: 100, baseAtk: 22 },
-  mage: { title: "영어 마법사", icon: "🪄", weapons: ["견습생 지팡이", "아크메이지 스태프", "별빛 현자의 지팡이"], baseHp: 90, baseAtk: 25 },
-  paladin: { title: "빛의 성기사", icon: "⚔️", weapons: ["수련용 대검", "기사의 성검", "태양신 엑스칼리버"], baseHp: 120, baseAtk: 20 }
+  archer: { title: "바람의 궁수", icon: "🏹", weapons: ["참나무 활", "정령의 장궁", "천공의 황금활"], baseHp: 100, baseAtk: 21 },
+  mage: { title: "영어 마법사", icon: "🪄", weapons: ["견습생 지팡이", "아크메이지 스태프", "별빛 현자의 지팡이"], baseHp: 90, baseAtk: 24 },
+  paladin: { title: "빛의 성기사", icon: "⚔️", weapons: ["수련용 대검", "기사의 성검", "태양신 엑스칼리버"], baseHp: 120, baseAtk: 19 }
 };
 
 function getWeaponName(job, wLv) {
@@ -251,9 +260,9 @@ function getWeaponName(job, wLv) {
 
 const avatarTiers = [
   { tier: 1, name: "Tier 1 · 초보 모험가 복장", desc: "기본 모험가 의상입니다.", hpBonus: 0, defBonus: 0, cost: 60 },
-  { tier: 2, name: "Tier 2 · 황금 왕관 예복", desc: "황금 왕관 뱃지와 황금빛 오라 테두리가 적용됩니다.", hpBonus: 25, defBonus: 2, cost: 120 },
-  { tier: 3, name: "Tier 3 · 각성 영웅의 갑주", desc: "각성 일러스트로 진화하며 영웅의 날개가 펼쳐집니다!", hpBonus: 60, defBonus: 5, cost: 200 },
-  { tier: 4, name: "Tier 4 · 천사의 날개 성의", desc: "전설의 청색 신성 오라와 최고 등급 능력치가 부여됩니다!", hpBonus: 110, defBonus: 9, cost: 0 }
+  { tier: 2, name: "Tier 2 · 황금 왕관 예복", desc: "황금 왕관 뱃지와 황금빛 오라 테두리가 적용됩니다.", hpBonus: 25, defBonus: 3, cost: 120 },
+  { tier: 3, name: "Tier 3 · 각성 영웅의 갑주", desc: "각성 일러스트로 진화하며 영웅의 날개가 펼쳐집니다!", hpBonus: 65, defBonus: 6, cost: 200 },
+  { tier: 4, name: "Tier 4 · 천사의 날개 성의", desc: "전설의 청색 신성 오라와 최고 등급 능력치가 부여됩니다!", hpBonus: 120, defBonus: 10, cost: 0 }
 ];
 
 let state = {
@@ -270,12 +279,14 @@ let state = {
   avatarTier: 1,
   hp: 100,
   maxHp: 100,
-  mp: 100,
+  mp: 60,
   maxMp: 100,
-  monsterHp: 110,
-  monsterMaxHp: 110,
-  monsterAtk: 11,
+  monsterHp: 135,
+  monsterMaxHp: 135,
+  monsterAtk: 14,
   monsterRage: 0,
+  monsterIntent: "attack", // 'attack' | 'charge' | 'guard' | 'special'
+  monsterStunned: false,
   combo: 0,
   doubleDmg: false,
   currentSkill: "fireball",
@@ -283,7 +294,8 @@ let state = {
   pool: [],
   dex: new Set(),
   wrongNotes: [],
-  timerId: null
+  timerId: null,
+  timeLeftRatio: 1
 };
 
 // ==========================================
@@ -359,8 +371,54 @@ function updateLobbyUI() {
 }
 
 // ==========================================
-// ⚔️ 전투 스테이지 진입 및 UI 갱신
+// ⚔️ 전투 스테이지 진입 및 몬스터 의도 결정
 // ==========================================
+function getCurrentMonster() {
+  const monIdx = (state.stage - 1) % monsterRoster.length;
+  return monsterRoster[monIdx];
+}
+
+function decideNextMonsterIntent() {
+  const mon = getCurrentMonster();
+  const roll = Math.random();
+
+  if (state.monsterRage >= 80) {
+    state.monsterIntent = "charge";
+  } else if (roll < 0.25) {
+    state.monsterIntent = "guard";
+  } else if (roll < 0.50) {
+    state.monsterIntent = "special";
+  } else if (roll < 0.70 && state.stage >= 2) {
+    state.monsterIntent = "charge";
+  } else {
+    state.monsterIntent = "attack";
+  }
+
+  updateMonsterSpeech();
+}
+
+function updateMonsterSpeech() {
+  const mon = getCurrentMonster();
+  const speechEl = document.getElementById("monster-speech");
+  const isBoss = mon.art === "dragon" || state.stage % 4 === 0;
+  document.getElementById("monster-art-box").innerHTML = getMonsterHtml(mon.art, isBoss, state.monsterIntent);
+
+  if (state.monsterStunned) {
+    speechEl.innerHTML = `<span style="color:#ffd54f;">💫 기절함! (다음 턴 행동 불가)</span>`;
+    return;
+  }
+
+  if (state.monsterIntent === "charge") {
+    speechEl.innerHTML = `<span style="color:#ff5252; font-weight:bold;">🔥 [예고] 필살 강타 준비 중! (철자 필살기로 끊기 가능!)</span>`;
+  } else if (state.monsterIntent === "guard") {
+    speechEl.innerHTML = `<span style="color:#40c4ff; font-weight:bold;">🛡️ [예고] 방어 태세! (받는 피해 75% 감소 · 명상 추천)</span>`;
+  } else if (state.monsterIntent === "special") {
+    speechEl.innerHTML = `<span style="color:#ea80fc; font-weight:bold;">🌀 [예고] 특수 능력 발동 예정! (${mon.trait})</span>`;
+  } else {
+    speechEl.innerHTML = `<span style="color:#e2e8f0;">⚔️ [예고] 일반 공격 준비 (예상 피해: ~${state.monsterAtk})</span>`;
+  }
+}
+
 function startGame() {
   if (state.pool.length === 0) {
     alert("출제 가능 어휘가 없습니다. 다른 학년이나 단원을 선택해주세요!");
@@ -372,19 +430,19 @@ function startGame() {
   state.maxHp = meta.baseHp + (state.lv - 1) * 15 + tierObj.hpBonus;
   state.hp = state.maxHp;
   state.maxMp = 100;
-  state.mp = 100;
+  state.mp = 60; // 마나 관리 전략성을 위해 60으로 시작
   state.combo = 0;
   state.doubleDmg = false;
   state.wrongNotes = [];
+  state.monsterStunned = false;
 
-  const monIdx = (state.stage - 1) % monsterRoster.length;
-  const mon = monsterRoster[monIdx];
-  const isBoss = mon.art === "dragon" || state.stage % 4 === 0;
-  const loopScale = 1 + Math.floor((state.stage - 1) / monsterRoster.length) * 0.35;
+  const mon = getCurrentMonster();
+  // 스테이지별 난이도 곡선 상향 (스테이지당 18%씩 강해짐)
+  const scale = 1 + (state.stage - 1) * 0.18;
 
-  state.monsterMaxHp = Math.round(mon.baseHp * loopScale);
+  state.monsterMaxHp = Math.round(mon.baseHp * scale);
   state.monsterHp = state.monsterMaxHp;
-  state.monsterAtk = Math.round(mon.baseAtk * loopScale);
+  state.monsterAtk = Math.round(mon.baseAtk * (1 + (state.stage - 1) * 0.14));
   state.monsterRage = 0;
 
   document.getElementById("selector-panel").style.display = "none";
@@ -397,12 +455,11 @@ function startGame() {
   const lessonName = state.lesson === "ALL" ? "전체 단원" : state.lesson;
   document.getElementById("current-scope-badge").textContent = `${state.grade} | ${state.pub} | ${lessonName}`;
   document.getElementById("hero-art-box").innerHTML = getHeroSvg(state.job, state.avatarTier);
-  document.getElementById("monster-art-box").innerHTML = getMonsterHtml(mon.art, isBoss);
   document.getElementById("monster-name").textContent = `STAGE ${state.stage} · ${mon.name}`;
-  document.getElementById("monster-speech").textContent = "덤벼라, 꼬마 영웅!";
 
+  decideNextMonsterIntent();
   updateBattleBars();
-  addLog(`⚔️ STAGE ${state.stage} 시작! 야생의 [${mon.name}]이(가) 나타났다!`);
+  addLog(`⚔️ STAGE ${state.stage} 시작! [${mon.name}] 등장! (특성: ${mon.trait})`);
 }
 
 function backToMenu() {
@@ -454,7 +511,7 @@ function updateBattleBars() {
 
   if (state.combo >= 3) {
     feverBadge.style.display = "inline-block";
-    feverBadge.textContent = `🌟 FEVER (공격력 1.5배!)`;
+    feverBadge.textContent = `🌟 FEVER (1.4배)`;
   } else {
     feverBadge.style.display = "none";
   }
@@ -487,11 +544,11 @@ function addLog(msg) {
 // ==========================================
 function openQuiz(skillType) {
   if (skillType === "meditate") {
-    const recover = 40;
+    const recover = 45;
     state.mp = Math.min(state.maxMp, state.mp + recover);
-    addLog(`✨ 마나 명상으로 MP를 ${recover} 회복했습니다!`);
+    addLog(`✨ 마나 명상으로 MP를 +${recover} 회복했습니다! (방어 태세 회피에 유용!)`);
     updateBattleBars();
-    monsterTurn();
+    setTimeout(monsterTurn, 400);
     return;
   }
 
@@ -514,8 +571,8 @@ function openQuiz(skillType) {
   document.getElementById("hint-btn").textContent = "🔍 힌트 (20G)";
 
   const skillNames = {
-    fireball: "🔥 기본 공격 퀴즈",
-    thunder: "⚡ 필살기 강타 (철자 입력)",
+    fireball: "🔥 기본 공격 (빠른 정답 시 신속 강타!)",
+    thunder: "⚡ 필살기 강타 (차징 중인 적 기절 가능!)",
     heal: "💚 치유 마법 퀴즈"
   };
   document.getElementById("quiz-skill-name").textContent = skillNames[skillType];
@@ -525,7 +582,7 @@ function openQuiz(skillType) {
   const spellingBox = document.getElementById("spelling-box");
 
   if (skillType === "thunder") {
-    document.getElementById("quiz-question").textContent = `뜻: "${target.m}" → 영어 철자를 입력하세요!`;
+    document.getElementById("quiz-question").textContent = `뜻: "${target.m}" → 영어 철자 입력!`;
     optionsBox.style.display = "none";
     spellingBox.style.display = "flex";
     const input = document.getElementById("spelling-input");
@@ -549,7 +606,10 @@ function openQuiz(skillType) {
       .join("");
   }
 
-  startQuizTimer(12);
+  // 얼음 골렘의 빙결 오라(8초), 일반 몬스터(11초)
+  const mon = getCurrentMonster();
+  const limitSec = mon.art === "golem" ? 8 : 11;
+  startQuizTimer(limitSec);
 }
 
 function startQuizTimer(seconds) {
@@ -557,11 +617,13 @@ function startQuizTimer(seconds) {
   const bar = document.getElementById("timer-bar");
   let left = seconds * 10;
   const total = left;
+  state.timeLeftRatio = 1;
   bar.style.width = "100%";
 
   state.timerId = setInterval(() => {
     left--;
-    bar.style.width = `${(left / total) * 100}%`;
+    state.timeLeftRatio = Math.max(0, left / total);
+    bar.style.width = `${state.timeLeftRatio * 100}%`;
     if (left <= 0) {
       clearInterval(state.timerId);
       handleWrongAnswer("시간 초과!");
@@ -596,19 +658,26 @@ function handleCorrectAnswer() {
   document.getElementById("controls").style.display = "block";
 
   if (state.currentSkill === "heal") {
-    const healAmt = 45 + state.lv * 5;
+    const healAmt = 50 + state.lv * 6;
     state.hp = Math.min(state.maxHp, state.hp + healAmt);
-    addLog(`💚 치유 마법 성공! 체력을 ${healAmt} 회복했습니다!`);
+    addLog(`💚 치유 마법 성공! 체력을 +${healAmt} 회복했습니다!`);
     updateBattleBars();
-    monsterTurn();
+    setTimeout(monsterTurn, 450);
     return;
   }
 
   const meta = jobMeta[state.job];
   let dmg = meta.baseAtk + state.weaponLv * 5 + (state.lv - 1) * 4;
-  if (state.currentSkill === "thunder") dmg = Math.round(dmg * 1.6);
+
+  // 스킬 및 직업 보너스
+  if (state.currentSkill === "thunder") dmg = Math.round(dmg * 1.65);
   if (state.job === "mage") dmg += 5;
-  if (state.combo >= 3) dmg = Math.round(dmg * 1.5);
+  if (state.combo >= 3) dmg = Math.round(dmg * 1.4);
+
+  // 신속 강타 (제한 시간 65% 이상 남았을 때)
+  const isFast = state.timeLeftRatio >= 0.65;
+  if (isFast) dmg = Math.round(dmg * 1.35);
+
   if (state.doubleDmg) {
     dmg *= 2;
     state.doubleDmg = false;
@@ -618,16 +687,38 @@ function handleCorrectAnswer() {
   const isCrit = Math.random() < critChance;
   if (isCrit) dmg = Math.round(dmg * 1.5);
 
+  // 몬스터 방어 태세 판정 (피해 75% 감소, 단 필살기(thunder)는 방어 관통!)
+  let guardMsg = "";
+  if (state.monsterIntent === "guard" && state.currentSkill !== "thunder") {
+    dmg = Math.max(3, Math.round(dmg * 0.25));
+    guardMsg = " (🛡️ 적의 방어 태세로 피해 감소!)";
+  } else if (state.monsterIntent === "guard" && state.currentSkill === "thunder") {
+    guardMsg = " (⚡ 필살기로 적의 방어 태세 관통!)";
+  }
+
+  // 필살 차징 중인 몬스터를 필살기(thunder)로 공격하면 기절(브레이크)!
+  let stunMsg = "";
+  if (state.monsterIntent === "charge" && state.currentSkill === "thunder") {
+    state.monsterStunned = true;
+    state.monsterRage = 0;
+    stunMsg = " 💥 [BREAK!] 적의 필살기 차징을 끊고 기절시켰습니다!";
+  }
+
   state.monsterHp = Math.max(0, state.monsterHp - dmg);
   state.monsterRage = Math.min(100, state.monsterRage + 25);
 
-  addLog(`${isCrit ? "💥 치명타! " : "⚔️ "}정답(${state.currentWord.w})! 몬스터에게 ${dmg} 데미지!`);
+  const tags = [
+    isFast ? "⚡신속강타" : "",
+    isCrit ? "💥치명타" : ""
+  ].filter(Boolean).join(" ");
+
+  addLog(`⚔️ ${tags ? `[${tags}] ` : ""}정답(${state.currentWord.w})! ${dmg} 데미지!${guardMsg}${stunMsg}`);
   updateBattleBars();
 
   if (state.monsterHp <= 0) {
     winBattle();
   } else {
-    setTimeout(monsterTurn, 500);
+    setTimeout(monsterTurn, 550);
   }
 }
 
@@ -639,41 +730,105 @@ function handleWrongAnswer(reason) {
 
   document.getElementById("quiz-box").style.display = "none";
   document.getElementById("controls").style.display = "block";
-  addLog(`❌ ${reason}`);
+  state.monsterRage = Math.min(100, state.monsterRage + 30);
+  addLog(`❌ ${reason} (적의 분노가 크게 상승합니다!)`);
   updateBattleBars();
   setTimeout(monsterTurn, 500);
 }
 
+// ==========================================
+// 👾 몬스터 턴 (예고된 의도 + 8종 고유 스킬 실행)
+// ==========================================
 function monsterTurn() {
   if (state.monsterHp <= 0) return;
 
+  if (state.monsterStunned) {
+    state.monsterStunned = false;
+    addLog(`💫 몬스터가 기절에서 깨어나며 턴을 넘겼습니다!`);
+    decideNextMonsterIntent();
+    updateBattleBars();
+    return;
+  }
+
+  const mon = getCurrentMonster();
   const tierObj = avatarTiers[state.avatarTier - 1];
   let dmg = state.monsterAtk;
-  let msg = "몬스터의 반격!";
+  let logText = "";
 
-  if (state.monsterRage >= 100) {
-    dmg = Math.round(dmg * 1.7);
-    state.monsterRage = 0;
-    msg = "🔥 몬스터의 분노 폭발 강타!";
-    document.getElementById("monster-speech").textContent = "크아앙! 받아라 필살기!";
+  // 오크 패시브: 체력이 낮을수록 공격력 상승
+  if (mon.art === "orc" && state.monsterHp < state.monsterMaxHp * 0.5) {
+    dmg = Math.round(dmg * 1.35);
   }
 
+  if (state.monsterIntent === "guard") {
+    // 방어 태세 턴에는 공격 대신 소량 회복하거나 분노 충전
+    state.monsterRage = Math.min(100, state.monsterRage + 25);
+    if (mon.art === "slime") {
+      const heal = 22;
+      state.monsterHp = Math.min(state.monsterMaxHp, state.monsterHp + heal);
+      logText = `🛡️ [${mon.name}]이(가) 방어 태세를 유지하며 체력을 +${heal} 재생했습니다!`;
+    } else {
+      logText = `🛡️ [${mon.name}]이(가) 단단히 방어하며 힘을 비축합니다!`;
+    }
+    addLog(logText);
+    decideNextMonsterIntent();
+    updateBattleBars();
+    return;
+  }
+
+  if (state.monsterIntent === "charge") {
+    dmg = Math.round(dmg * 1.85);
+    state.monsterRage = 0;
+    logText = `🔥 [${mon.name}]의 필살 강타 폭발!`;
+  } else if (state.monsterIntent === "special") {
+    if (mon.art === "slime") {
+      const heal = 25;
+      state.monsterHp = Math.min(state.monsterMaxHp, state.monsterHp + heal);
+      dmg = Math.round(dmg * 0.8);
+      logText = `🟢 [슬라임 분열 재생] 체력 +${heal} 회복 후 점액 공격!`;
+    } else if (mon.art === "bat") {
+      const drain = Math.round(dmg * 0.6);
+      state.monsterHp = Math.min(state.monsterMaxHp, state.monsterHp + drain);
+      logText = `🦇 [흡혈 송곳니] 영웅을 물고 체력을 +${drain} 흡수!`;
+    } else if (mon.art === "ghost" || mon.art === "darkmage") {
+      state.mp = Math.max(0, state.mp - 15);
+      logText = `🌀 [영혼 마나 흡수] 영웅의 MP를 15 빼앗았습니다!`;
+    } else if (mon.art === "werewolf") {
+      dmg = Math.round(dmg * 1.45);
+      logText = `🐺 [광란의 2연속 할퀴기] 날카로운 연속 공격!`;
+    } else if (mon.art === "dragon") {
+      dmg = Math.round(dmg * 1.5);
+      state.monsterRage = Math.min(100, state.monsterRage + 40);
+      logText = `🐉 [작열의 화염 숨결] 영웅에게 화상 피해!`;
+    } else {
+      dmg = Math.round(dmg * 1.25);
+      logText = `❄️ [${mon.name}]의 특수 강타!`;
+    }
+  } else {
+    logText = `👾 [${mon.name}]의 공격!`;
+  }
+
+  // 방어력 및 성기사 패시브(-4) 적용
   dmg -= tierObj.defBonus;
   if (state.job === "paladin") dmg -= 4;
-  dmg = Math.max(2, dmg);
+  dmg = Math.max(3, dmg);
 
   state.hp = Math.max(0, state.hp - dmg);
-  addLog(`👾 ${msg} 영웅이 ${dmg}의 피해를 입었습니다.`);
-  updateBattleBars();
+  addLog(`${logText} 영웅이 ${dmg}의 피해를 입었습니다.`);
 
   if (state.hp <= 0) {
+    updateBattleBars();
     loseBattle();
+    return;
   }
+
+  decideNextMonsterIntent();
+  updateBattleBars();
 }
 
 function winBattle() {
-  const goldReward = 35 + state.stage * 10;
-  const expReward = 55;
+  const goldReward = 45 + state.stage * 12;
+  const expReward = 60;
   state.gold += goldReward;
   state.exp += expReward;
 
@@ -693,7 +848,7 @@ function winBattle() {
 }
 
 function loseBattle() {
-  addLog(`💀 영웅이 쓰러졌습니다... 로비에서 장비나 아바타를 강화해보세요!`);
+  addLog(`💀 영웅이 쓰러졌습니다... 대장간에서 무기를 강화하거나 아바타를 진화시켜 보세요!`);
   showResultPanel(false);
 }
 
@@ -745,8 +900,8 @@ function buyAndUseItem(type) {
   if (type === "potion") {
     if (state.gold < 30) return alert("골드가 부족합니다! (30G 필요)");
     state.gold -= 30;
-    state.hp = Math.min(state.maxHp, state.hp + 45);
-    addLog("🧪 체력물약 사용! HP +45 회복!");
+    state.hp = Math.min(state.maxHp, state.hp + 50);
+    addLog("🧪 체력물약 사용! HP +50 즉시 회복!");
   } else if (type === "double") {
     if (state.gold < 40) return alert("골드가 부족합니다! (40G 필요)");
     if (state.doubleDmg) return alert("이미 더블데미지 효과가 적용 중입니다!");
