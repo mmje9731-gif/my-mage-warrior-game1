@@ -15,9 +15,10 @@
       </div>
       <div class="hud-right">
         <span class="gold-pill">💰 <span id="hud-gold">50</span>G</span>
-        <button class="hud-btn forge" onclick="openForgeModal()">🔨 대장간</button>
-        <button class="hud-btn avatar-shop" onclick="openAvatarModal()">👗 아바타</button>
-        <button class="hud-btn dex" onclick="openDexModal()">📖 도감 (<span id="hud-dex">0</span>)</button>
+        <button type="button" class="hud-btn guide-btn" onclick="openGuideModal()">❓ 게임방법</button>
+        <button type="button" class="hud-btn forge" onclick="openForgeModal()">🔨 대장간</button>
+        <button type="button" class="hud-btn avatar-shop" onclick="openAvatarModal()">👗 아바타</button>
+        <button type="button" class="hud-btn dex" onclick="openDexModal()">📖 도감 (<span id="hud-dex">0</span>)</button>
       </div>
     </header>
 
@@ -75,7 +76,7 @@
         <div class="word-count-tag" id="word-count-info">출제 가능 어휘: 0개</div>
       </div>
 
-      <button class="start-btn" onclick="startGame()">⚔️ 모험 출발하기!</button>
+      <button type="button" class="start-btn" onclick="startGame()">⚔️ 모험 출발하기!</button>
     </div>
 
     <!-- 2. 실제 전투 스테이지 화면 -->
@@ -86,7 +87,7 @@
           <span id="combo-badge" class="combo-badge" style="display:none;">🔥 0 COMBO</span>
           <span id="fever-badge" class="fever-badge" style="display:none;">🌟 FEVER (MP 0)</span>
         </div>
-        <button class="menu-return-btn" onclick="backToMenu()">🏠 로비로</button>
+        <button type="button" class="menu-return-btn" onclick="backToMenu()">🏠 로비로</button>
       </div>
 
       <!-- 배틀 필드 -->
@@ -98,7 +99,6 @@
           </div>
           <div class="char-stage float-anim" id="hero-art-box"></div>
           <div class="equip-pill" id="weapon-tag">🏹 참나무 활 (+0)</div>
-
           <div class="stat-bars">
             <div class="bar-row">
               <span>HP</span>
@@ -116,9 +116,9 @@
               <small><span id="hero-exp-text">0</span>/<span id="hero-maxexp-text">100</span></small>
             </div>
           </div>
-
           <div class="pet-companion">
-            <span id="pet-icon">🥚</span> <span id="pet-name">신비한 알</span> (Lv.<span id="pet-lv">1</span>)
+            <span id="pet-icon">🥚</span>
+            <span id="pet-name">신비한 알</span> (Lv.<span id="pet-lv">1</span>)
           </div>
         </div>
 
@@ -129,7 +129,6 @@
           <div class="speech-bubble" id="monster-speech">덤벼라, 꼬마 영웅!</div>
           <div class="char-stage float-anim-delay" id="monster-art-box"></div>
           <h3 class="monster-title" id="monster-name">STAGE 1 · 슬라임 킹</h3>
-
           <div class="stat-bars">
             <div class="bar-row">
               <span>HP</span>
@@ -150,47 +149,46 @@
         <div class="timer-bar-bg"><div id="timer-bar" class="timer-bar"></div></div>
         <div class="quiz-header">
           <span class="quiz-badge" id="quiz-skill-name">🔥 기본 공격 퀴즈</span>
-          <button class="tts-btn" onclick="speakCurrentWord()">🔊 발음 듣기</button>
-          <button class="hint-btn" id="hint-btn" onclick="useHintMagnifier()">🔍 힌트 (20G)</button>
+          <button type="button" class="tts-btn" onclick="speakCurrentWord()">🔊 발음 듣기</button>
+          <button type="button" class="hint-btn" id="hint-btn" onclick="useHintMagnifier()">🔍 힌트 (20G)</button>
         </div>
         <div class="quiz-pos" id="quiz-pos">[명사]</div>
         <h3 id="quiz-question">문제 텍스트</h3>
         <div id="quiz-options" class="quiz-options"></div>
         <div id="spelling-box" class="spelling-box" style="display:none;">
           <input type="text" id="spelling-input" placeholder="영어 철자를 입력하세요" autocomplete="off" onkeydown="if(event.key==='Enter') submitSpelling()">
-          <button onclick="submitSpelling()">⚡ 주문 발사!</button>
+          <button type="button" onclick="submitSpelling()">⚡ 주문 발사!</button>
         </div>
       </div>
 
       <!-- 직관적인 RPG 스킬 & 퀵 아이템 커맨드 보드 -->
       <div id="controls">
         <div class="skill-grid">
-          <button class="skill-card atk" onclick="openQuiz('fireball')">
+          <button type="button" class="skill-card atk" onclick="openQuiz('fireball')">
             <span class="sk-icon">🔥</span>
             <strong>기본 공격</strong>
             <small>단어 뜻 퀴즈 · MP 20</small>
           </button>
-          <button class="skill-card ult" onclick="openQuiz('thunder')">
+          <button type="button" class="skill-card ult" onclick="openQuiz('thunder')">
             <span class="sk-icon">⚡</span>
             <strong>필살기 강타</strong>
             <small>철자 입력 · MP 30</small>
           </button>
-          <button class="skill-card heal" onclick="openQuiz('heal')">
+          <button type="button" class="skill-card heal" onclick="openQuiz('heal')">
             <span class="sk-icon">💚</span>
             <strong>치유 마법</strong>
             <small>단어 뜻 퀴즈 · MP 25</small>
           </button>
-          <button class="skill-card mp" onclick="openQuiz('meditate')">
+          <button type="button" class="skill-card mp" onclick="openQuiz('meditate')">
             <span class="sk-icon">✨</span>
             <strong>마나 명상</strong>
             <small>MP +40 회복</small>
           </button>
         </div>
-
         <div class="quick-belt">
           <span class="belt-label">🎒 퀵 아이템:</span>
-          <button onclick="buyAndUseItem('potion')">🧪 체력물약 (+45 HP / 30G)</button>
-          <button onclick="buyAndUseItem('double')">📜 더블데미지 (2배 공격 / 40G)</button>
+          <button type="button" onclick="buyAndUseItem('potion')">🧪 체력물약 (+45 HP / 30G)</button>
+          <button type="button" onclick="buyAndUseItem('double')">📜 더블데미지 (2배 공격 / 40G)</button>
         </div>
       </div>
 
@@ -198,9 +196,9 @@
       <div id="result-panel" class="result-panel" style="display:none;">
         <div id="wrong-notes-box" class="wrong-notes-box"></div>
         <div class="result-actions">
-          <button id="restart-btn" class="restart-btn" onclick="startGame()">🚀 다음 스테이지 도전!</button>
-          <button class="sub-action-btn" onclick="openForgeModal()">🔨 대장간 무기 강화</button>
-          <button class="sub-action-btn" onclick="openAvatarModal()">👗 아바타 업그레이드</button>
+          <button type="button" id="restart-btn" class="restart-btn" onclick="startGame()">🚀 다음 스테이지 도전!</button>
+          <button type="button" class="sub-action-btn" onclick="openForgeModal()">🔨 대장간 무기 강화</button>
+          <button type="button" class="sub-action-btn" onclick="openAvatarModal()">👗 아바타 업그레이드</button>
         </div>
       </div>
 
@@ -208,12 +206,93 @@
       <div id="battle-log" class="battle-log"></div>
     </div>
 
+    <!-- ❓ 초등학생 눈높이 게임방법 모달 -->
+    <div id="guide-modal" class="modal-overlay" style="display:none;" onclick="handleGuideBackdropClick(event)">
+      <div class="modal-content guide-modal">
+        <div class="modal-header guide-header">
+          <h3>❓ 게임방법 한눈에 보기</h3>
+          <button type="button" class="close-modal-btn" onclick="closeGuideModal()" aria-label="닫기">✖</button>
+        </div>
+
+        <div class="guide-body">
+          <div class="guide-hero-tip">
+            <span class="tip-badge">TIP</span>
+            <p>영어 퀴즈를 맞히면 공격과 회복이 발동돼요! 틀려도 괜찮으니 편하게 도전해 보세요.</p>
+          </div>
+
+          <div class="guide-cards">
+            <div class="guide-card step-1">
+              <div class="guide-step-num">1</div>
+              <div class="guide-icon">🛡️</div>
+              <div class="guide-text">
+                <h4>영웅과 교과서 단원 고르기</h4>
+                <p>궁수·마법사·성기사 중 내 영웅을 고르고, 우리 학교 학년과 단원을 선택해요.</p>
+              </div>
+            </div>
+
+            <div class="guide-card step-2">
+              <div class="guide-step-num">2</div>
+              <div class="guide-icon">⚡</div>
+              <div class="guide-text">
+                <h4>퀴즈로 스킬 발사!</h4>
+                <p><strong>기본 공격·치유</strong>는 뜻 고르기, <strong>필살기</strong>는 철자 입력! 맞히면 몬스터를 공격하거나 HP·MP를 채워요.</p>
+              </div>
+            </div>
+
+            <div class="guide-card step-3">
+              <div class="guide-step-num">3</div>
+              <div class="guide-icon">🔊</div>
+              <div class="guide-text">
+                <h4>막힐 땐 발음 듣기 · 힌트 · 물약</h4>
+                <p>모르는 단어는 <strong>🔊 발음 듣기</strong>, 어려운 문제는 <strong>🔍 힌트</strong>나 <strong>🧪 퀵 아이템</strong>을 써보세요.</p>
+              </div>
+            </div>
+
+            <div class="guide-card step-4">
+              <div class="guide-step-num">4</div>
+              <div class="guide-icon">👑</div>
+              <div class="guide-text">
+                <h4>장비 강화하고 도감 모으기</h4>
+                <p>모은 골드(G)로 무기와 아바타를 키우고, 전투 후 <strong>오답노트</strong>와 <strong>📖 도감</strong>으로 복습해요.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 간단 퀴즈 체험 미니 박스 -->
+          <div class="guide-mini-quiz">
+            <div class="mini-quiz-top">
+              <span class="mini-quiz-tag">🎮 10초 체험</span>
+              <span class="mini-quiz-word">apple</span>
+            </div>
+            <p class="mini-quiz-q">"apple"의 뜻은 무엇일까요? 눌러서 확인해 보세요!</p>
+            <div class="mini-quiz-choices">
+              <button type="button" class="mini-choice-btn" onclick="checkGuideDemo(this, false)">바나나</button>
+              <button type="button" class="mini-choice-btn" onclick="checkGuideDemo(this, true)">사과</button>
+              <button type="button" class="mini-choice-btn" onclick="checkGuideDemo(this, false)">학교</button>
+            </div>
+            <div id="guide-demo-result" class="mini-quiz-result">정답을 맞히면 이렇게 공격 스킬이 나가요!</div>
+          </div>
+
+          <label class="guide-hide-check">
+            <input type="checkbox" id="guide-hide-checkbox">
+            <span>다음부터 로비에서 자동으로 열지 않기</span>
+          </label>
+
+          <div class="guide-actions">
+            <button type="button" class="guide-start-btn" onclick="closeGuideModal()">
+              ⚔️ 알겠어요, 모험 시작하기!
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 🔨 대장간 (무기 업그레이드) 모달 -->
     <div id="forge-modal" class="modal-overlay" style="display:none;">
       <div class="modal-content shop-modal">
         <div class="modal-header">
           <h3>🔨 왕국 대장간 · 무기 강화</h3>
-          <button onclick="closeForgeModal()">✖</button>
+          <button type="button" onclick="closeForgeModal()">✖</button>
         </div>
         <div class="shop-body">
           <div class="shop-preview-box">
@@ -226,7 +305,7 @@
             <div class="arrow-up">⬇️ 강화 시 ⬇️</div>
             <div class="next-stat">다음 추가 공격력: <strong>+<span id="forge-next-atk">5</span></strong></div>
           </div>
-          <button class="upgrade-big-btn" id="forge-upgrade-btn" onclick="upgradeWeapon()">
+          <button type="button" class="upgrade-big-btn" id="forge-upgrade-btn" onclick="upgradeWeapon()">
             🔨 무기 강화하기 (<span id="forge-cost-text">40</span>G)
           </button>
         </div>
@@ -238,7 +317,7 @@
       <div class="modal-content shop-modal">
         <div class="modal-header">
           <h3>👗 영웅 아바타 & 의상 업그레이드</h3>
-          <button onclick="closeAvatarModal()">✖</button>
+          <button type="button" onclick="closeAvatarModal()">✖</button>
         </div>
         <div class="shop-body">
           <div class="shop-preview-box">
@@ -251,7 +330,7 @@
             <div class="arrow-up">⬇️ 업그레이드 시 ⬇️</div>
             <div class="next-stat" id="av-next-box">다음 보너스: <strong>최대 HP +<span id="av-next-hp">25</span> / 방어력 +<span id="av-next-def">2</span></strong></div>
           </div>
-          <button class="upgrade-big-btn avatar-btn" id="avatar-upgrade-btn" onclick="upgradeAvatar()">
+          <button type="button" class="upgrade-big-btn avatar-btn" id="avatar-upgrade-btn" onclick="upgradeAvatar()">
             ✨ 아바타 의상 진화하기 (<span id="avatar-cost-text">60</span>G)
           </button>
         </div>
@@ -263,7 +342,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h3>📖 황금 단어 도감 (클릭하면 원어민 발음 재생)</h3>
-          <button onclick="closeDexModal()">✖</button>
+          <button type="button" onclick="closeDexModal()">✖</button>
         </div>
         <div id="dex-grid" class="dex-grid"></div>
       </div>
